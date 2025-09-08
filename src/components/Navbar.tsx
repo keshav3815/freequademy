@@ -16,7 +16,7 @@ export default function Navbar() {
           <Link to="/" className="flex items-center gap-2 hover:scale-105 transition-transform">
             <BookOpen className="h-8 w-8 text-primary" />
             <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              LearnSphere
+              freequademy
             </span>
           </Link>
 

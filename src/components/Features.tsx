@@ -58,7 +58,7 @@ export default function Features() {
           <div className="inline-flex items-center gap-2 bg-secondary/10 rounded-full px-4 py-2 mb-4">
             <Sparkles className="h-4 w-4 text-secondary" />
             <span className="text-sm font-medium text-secondary">
-              Why Choose LearnSphere
+              Why Choose freequademy
             </span>
           </div>
           <h2 className="text-3xl md:text-4xl font-bold mb-4">

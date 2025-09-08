@@ -11,7 +11,7 @@ export default function Footer() {
             <Link to="/" className="flex items-center gap-2 mb-4">
               <BookOpen className="h-8 w-8 text-primary" />
               <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                LearnSphere
+                freequademy
               </span>
             </Link>
             <p className="text-sm text-muted-foreground mb-4">
@@ -93,7 +93,7 @@ export default function Footer() {
             <ul className="space-y-3">
               <li className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Mail className="h-4 w-4" />
-                support@learnsphere.com
+                support@freequademy.com
               </li>
               <li className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Phone className="h-4 w-4" />
@@ -109,7 +109,7 @@ export default function Footer() {
 
         <div className="border-t border-border mt-8 pt-8 text-center">
           <p className="text-sm text-muted-foreground">
-            © 2024 LearnSphere. All rights reserved.
+            © 2024 freequademy. All rights reserved.
           </p>
         </div>
       </div>
