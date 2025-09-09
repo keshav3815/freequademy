@@ -9,9 +9,10 @@ import MockTests from "./pages/MockTests";
 import Dashboard from "./pages/Dashboard";
 import Pricing from "./pages/Pricing";
 import Login from "./pages/Login";
-import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import TeacherDashboard from "./pages/TeacherDashboard";
+import SignupStudent from "./pages/SignupStudent";
+import SignupMentor from "./pages/SignupMentor";
 
 const queryClient = new QueryClient();
 
@@ -29,7 +30,9 @@ const App = () => (
           <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+          
+          <Route path="/signup-student" element={<SignupStudent />} />
+          <Route path="/signup-mentor" element={<SignupMentor />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
