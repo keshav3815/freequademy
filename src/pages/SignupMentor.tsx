@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Mail, Lock, User, GraduationCap } from "lucide-react";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
+import { LoginModal } from "@/components/LoginModal";
 
 const SignupMentor = () => {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ const SignupMentor = () => {
   const [subject, setSubject] = useState("");
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -79,8 +81,9 @@ const SignupMentor = () => {
     } else {
       toast({
         title: "Success!",
-        description: "Please check your email to confirm your account.",
+        description: "Account created successfully! Please login to continue.",
       });
+      setShowLoginModal(true);
     }
 
     setIsLoading(false);
@@ -199,6 +202,12 @@ const SignupMentor = () => {
           </form>
         </CardContent>
       </Card>
+      
+      <LoginModal 
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        userRole="mentor"
+      />
     </div>
   );
 };

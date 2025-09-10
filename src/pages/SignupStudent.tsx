@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Mail, Lock, User, BookOpen } from "lucide-react";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
+import { LoginModal } from "@/components/LoginModal";
 
 const SignupStudent = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const SignupStudent = () => {
   const [grade, setGrade] = useState("");
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -80,8 +82,9 @@ const SignupStudent = () => {
     } else {
       toast({
         title: "Success!",
-        description: "Please check your email to confirm your account.",
+        description: "Account created successfully! Please login to continue.",
       });
+      setShowLoginModal(true);
     }
 
     setIsLoading(false);
@@ -206,6 +209,12 @@ const SignupStudent = () => {
           </form>
         </CardContent>
       </Card>
+      
+      <LoginModal 
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        userRole="student"
+      />
     </div>
   );
 };
