@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import {
   Trophy,
   Target,
@@ -17,7 +20,8 @@ import {
   Zap,
   Medal,
   Crown,
-  Shield
+  Shield,
+  Loader2
 } from "lucide-react";
 
 const badges = [
@@ -29,6 +33,48 @@ const badges = [
   { icon: Medal, name: "100 Questions", earned: true, color: "text-green-500" },
 ];
 
+// Grade-specific recent activity
+const getRecentActivityByGrade = (grade: string) => {
+  const gradeActivities: Record<string, typeof recentActivity> = {
+    "6": [
+      { subject: "Mathematics", chapter: "Fractions and Decimals", score: 85, time: "2 hours ago" },
+      { subject: "Science", chapter: "Food and Nutrition", score: 92, time: "Yesterday" },
+      { subject: "English", chapter: "Nouns and Pronouns", score: 78, time: "2 days ago" },
+    ],
+    "7": [
+      { subject: "Mathematics", chapter: "Algebraic Expressions", score: 85, time: "2 hours ago" },
+      { subject: "Science", chapter: "Heat and Temperature", score: 92, time: "Yesterday" },
+      { subject: "English", chapter: "Tenses", score: 78, time: "2 days ago" },
+    ],
+    "8": [
+      { subject: "Mathematics", chapter: "Linear Equations", score: 85, time: "2 hours ago" },
+      { subject: "Science", chapter: "Force and Pressure", score: 92, time: "Yesterday" },
+      { subject: "English", chapter: "Active and Passive Voice", score: 78, time: "2 days ago" },
+    ],
+    "9": [
+      { subject: "Mathematics", chapter: "Polynomials", score: 85, time: "2 hours ago" },
+      { subject: "Science", chapter: "Atoms and Molecules", score: 92, time: "Yesterday" },
+      { subject: "English", chapter: "Direct and Indirect Speech", score: 78, time: "2 days ago" },
+    ],
+    "10": [
+      { subject: "Mathematics", chapter: "Quadratic Equations", score: 85, time: "2 hours ago" },
+      { subject: "Science", chapter: "Chemical Reactions", score: 92, time: "Yesterday" },
+      { subject: "English", chapter: "Grammar Basics", score: 78, time: "2 days ago" },
+    ],
+    "11": [
+      { subject: "Mathematics", chapter: "Trigonometry", score: 85, time: "2 hours ago" },
+      { subject: "Physics", chapter: "Motion in a Plane", score: 92, time: "Yesterday" },
+      { subject: "Chemistry", chapter: "Chemical Bonding", score: 78, time: "2 days ago" },
+    ],
+    "12": [
+      { subject: "Mathematics", chapter: "Calculus", score: 85, time: "2 hours ago" },
+      { subject: "Physics", chapter: "Electromagnetic Waves", score: 92, time: "Yesterday" },
+      { subject: "Chemistry", chapter: "Organic Chemistry", score: 78, time: "2 days ago" },
+    ],
+  };
+  return gradeActivities[grade] || gradeActivities["10"];
+};
+
 const recentActivity = [
   { subject: "Mathematics", chapter: "Quadratic Equations", score: 85, time: "2 hours ago" },
   { subject: "Science", chapter: "Chemical Reactions", score: 92, time: "Yesterday" },
@@ -36,10 +82,62 @@ const recentActivity = [
 ];
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [level] = useState(12);
   const [xp] = useState(2850);
   const [nextLevelXp] = useState(3000);
   const [streak] = useState(7);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        navigate("/login");
+        return;
+      }
+
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching profile:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load profile",
+          variant: "destructive",
+        });
+      } else {
+        setUserProfile(profile);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const currentActivities = userProfile?.grade 
+    ? getRecentActivityByGrade(userProfile.grade) 
+    : recentActivity;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -50,10 +148,12 @@ export default function Dashboard() {
           {/* Header */}
           <div className="mb-8 animate-slide-up">
             <h1 className="text-3xl md:text-4xl font-bold mb-2">
-              Welcome back, <span className="bg-gradient-primary bg-clip-text text-transparent">Student!</span>
+              Welcome back, <span className="bg-gradient-primary bg-clip-text text-transparent">
+                {userProfile?.full_name || 'Student'}!
+              </span>
             </h1>
             <p className="text-muted-foreground">
-              Track your progress and achievements
+              Class {userProfile?.grade || '10'} - Track your progress and achievements
             </p>
           </div>
 
@@ -115,7 +215,7 @@ export default function Dashboard() {
                 <div className="flex justify-between mt-4">
                   <Badge variant="outline">
                     <TrendingUp className="h-3 w-3 mr-1" />
-                    Top 15% in your class
+                    Top 15% in Class {userProfile?.grade || '10'}
                   </Badge>
                   <Button variant="gradient" size="sm">
                     View Leaderboard
@@ -127,7 +227,7 @@ export default function Dashboard() {
               <Card className="p-6 animate-fade-in">
                 <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
                 <div className="space-y-4">
-                  {recentActivity.map((activity, index) => (
+                  {currentActivities.map((activity, index) => (
                     <div key={index} className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
                       <div>
                         <h3 className="font-medium">{activity.subject}</h3>
