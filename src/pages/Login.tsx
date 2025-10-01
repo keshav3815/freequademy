@@ -21,44 +21,23 @@ export default function Login() {
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Redirect based on user role if logged in
+        // Redirect to dashboard if logged in
         if (session?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', session.user.id)
-            .single();
-            
-          if (profile?.role === 'mentor') {
-            navigate("/teacher-dashboard");
-          } else {
-            navigate("/dashboard");
-          }
+          navigate("/dashboard");
         }
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      
       if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-          
-        if (profile?.role === 'mentor') {
-          navigate("/teacher-dashboard");
-        } else {
-          navigate("/dashboard");
-        }
+        navigate("/dashboard");
       }
     });
 
@@ -171,19 +150,13 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center space-y-3">
+          <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
-              Don't have an account?
+              Don't have an account?{" "}
+              <Link to="/signup" className="text-primary hover:underline font-medium">
+                Sign up for free
+              </Link>
             </p>
-            <div className="flex gap-4 justify-center">
-              <Link to="/signup-student" className="text-primary hover:underline font-medium">
-                Sign up as Student
-              </Link>
-              <span className="text-muted-foreground">|</span>
-              <Link to="/signup-mentor" className="text-primary hover:underline font-medium">
-                Sign up as Mentor
-              </Link>
-            </div>
           </div>
         </Card>
       </div>
