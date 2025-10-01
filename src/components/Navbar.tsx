@@ -118,6 +118,14 @@ export default function Navbar() {
             >
               Mock Tests
             </Link>
+            <Link
+              to="/mentorship"
+              className={`font-medium transition-colors ${
+                isActive("/mentorship") ? "text-primary" : "text-muted-foreground hover:text-primary"
+              }`}
+            >
+              Mentorship
+            </Link>
             {user && (
               <Link
                 to={getDashboardPath()}
