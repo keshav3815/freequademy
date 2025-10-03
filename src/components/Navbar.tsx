@@ -126,6 +126,14 @@ export default function Navbar() {
             >
               Mentorship
             </Link>
+            <Link
+              to="/community"
+              className={`font-medium transition-colors ${
+                isActive("/community") ? "text-primary" : "text-muted-foreground hover:text-primary"
+              }`}
+            >
+              Community
+            </Link>
             {user && (
               <Link
                 to={getDashboardPath()}
@@ -236,6 +244,20 @@ export default function Navbar() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Mock Tests
+              </Link>
+              <Link
+                to="/mentorship"
+                className="font-medium text-muted-foreground hover:text-primary transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Mentorship
+              </Link>
+              <Link
+                to="/community"
+                className="font-medium text-muted-foreground hover:text-primary transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Community
               </Link>
               {user && (
                 <Link
