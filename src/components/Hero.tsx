@@ -52,17 +52,17 @@ export default function Hero() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary">500+</div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+              <div className="text-center sm:text-center">
+                <div className="text-2xl md:text-3xl font-bold text-primary">500+</div>
                 <div className="text-sm text-muted-foreground">Video Lessons</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-secondary">10K+</div>
+              <div className="text-center sm:text-center">
+                <div className="text-2xl md:text-3xl font-bold text-secondary">10K+</div>
                 <div className="text-sm text-muted-foreground">Practice Questions</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-success">95%</div>
+              <div className="text-center sm:text-center">
+                <div className="text-2xl md:text-3xl font-bold text-success">95%</div>
                 <div className="text-sm text-muted-foreground">Success Rate</div>
               </div>
             </div>

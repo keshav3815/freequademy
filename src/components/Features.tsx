@@ -83,14 +83,14 @@ export default function Features() {
           ))}
         </div>
 
-        <div className="mt-12 text-center">
-          <Card className="inline-flex items-center gap-4 p-6 bg-gradient-card">
-            <Clock className="h-8 w-8 text-primary" />
-            <div className="text-left">
+        <div className="mt-12 flex justify-center">
+          <Card className="flex flex-col sm:flex-row items-center gap-4 p-6 bg-gradient-card w-full sm:w-auto">
+            <Clock className="h-8 w-8 text-primary flex-shrink-0" />
+            <div className="text-center sm:text-left">
               <h3 className="font-semibold">Limited Time Offer!</h3>
               <p className="text-sm text-muted-foreground">Get 30 days free trial with full access</p>
             </div>
-            <Button variant="gradient">
+            <Button variant="gradient" className="w-full sm:w-auto">
               Start Free Trial
             </Button>
           </Card>
