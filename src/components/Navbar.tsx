@@ -152,6 +152,14 @@ export default function Navbar() {
             >
               Pricing
             </Link>
+            <Link
+              to="/donations"
+              className={`font-medium transition-colors ${
+                isActive("/donations") ? "text-primary" : "text-muted-foreground hover:text-primary"
+              }`}
+            >
+              Donate
+            </Link>
           </div>
 
           <div className="hidden md:flex items-center gap-3">
@@ -274,6 +282,13 @@ export default function Navbar() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Pricing
+              </Link>
+              <Link
+                to="/donations"
+                className="font-medium text-muted-foreground hover:text-primary transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Donate
               </Link>
               <div className="flex flex-col gap-2 pt-3 border-t border-border">
                 {user ? (
