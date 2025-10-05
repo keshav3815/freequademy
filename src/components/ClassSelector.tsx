@@ -3,41 +3,43 @@ import { Link } from "react-router-dom";
 import { GraduationCap } from "lucide-react";
 
 const classes = [
-  { grade: 6, color: "from-purple-400 to-purple-600" },
-  { grade: 7, color: "from-blue-400 to-blue-600" },
-  { grade: 8, color: "from-green-400 to-green-600" },
-  { grade: 9, color: "from-yellow-400 to-yellow-600" },
-  { grade: 10, color: "from-orange-400 to-orange-600" },
-  { grade: 11, color: "from-red-400 to-red-600" },
-  { grade: 12, color: "from-pink-400 to-pink-600" },
+  { grade: 6, bgClass: "bg-primary/10 hover:bg-primary/20", borderClass: "border-primary/30" },
+  { grade: 7, bgClass: "bg-secondary/10 hover:bg-secondary/20", borderClass: "border-secondary/30" },
+  { grade: 8, bgClass: "bg-success/10 hover:bg-success/20", borderClass: "border-success/30" },
+  { grade: 9, bgClass: "bg-accent/10 hover:bg-accent/20", borderClass: "border-accent/30" },
+  { grade: 10, bgClass: "bg-primary/10 hover:bg-primary/20", borderClass: "border-primary/30" },
+  { grade: 11, bgClass: "bg-secondary/10 hover:bg-secondary/20", borderClass: "border-secondary/30" },
+  { grade: 12, bgClass: "bg-success/10 hover:bg-success/20", borderClass: "border-success/30" },
 ];
 
 export default function ClassSelector() {
   return (
-    <section className="py-16 bg-muted/30">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12 animate-slide-up">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Choose Your <span className="bg-gradient-primary bg-clip-text text-transparent">Class</span>
+    <section className="py-16 md:py-24 bg-gradient-accent">
+      <div className="container mx-auto px-4 md:px-6 lg:px-8">
+        <div className="text-center mb-12 md:mb-16 animate-slide-up">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-4 md:mb-6">
+            Choose Your <span className="text-gradient-primary">Class</span>
           </h2>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-muted-foreground text-base md:text-lg lg:text-xl max-w-2xl mx-auto">
             Select your grade to access tailored content and curriculum
           </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 md:gap-4">
           {classes.map((cls, index) => (
             <Link
               key={cls.grade}
               to={`/courses?class=${cls.grade}`}
               className="animate-scale-in"
-              style={{ animationDelay: `${index * 100}ms` }}
+              style={{ animationDelay: `${index * 50}ms` }}
             >
-              <Card className="relative overflow-hidden hover:scale-105 transition-all duration-300 hover:shadow-xl cursor-pointer group">
-                <div className={`absolute inset-0 bg-gradient-to-br ${cls.color} opacity-10 group-hover:opacity-20 transition-opacity`} />
-                <div className="p-6 text-center relative">
-                  <GraduationCap className="h-8 w-8 mx-auto mb-3 text-primary" />
-                  <div className="text-2xl font-bold mb-1">Class {cls.grade}</div>
+              <Card className={`group relative overflow-hidden hover-lift cursor-pointer border-2 ${cls.borderClass} transition-all`}>
+                <div className={`absolute inset-0 ${cls.bgClass} transition-all`} />
+                <div className="p-4 md:p-6 text-center relative">
+                  <div className="p-2 md:p-3 bg-background/80 rounded-xl w-fit mx-auto mb-3 group-hover:scale-110 transition-transform">
+                    <GraduationCap className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+                  </div>
+                  <div className="text-xl md:text-2xl font-bold mb-1">Class {cls.grade}</div>
                   <div className="text-xs text-muted-foreground">CBSE/ICSE</div>
                 </div>
               </Card>

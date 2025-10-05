@@ -52,45 +52,56 @@ const features = [
 
 export default function Features() {
   return (
-    <section className="py-16">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12 animate-slide-up">
-          <div className="inline-flex items-center gap-2 bg-secondary/10 rounded-full px-4 py-2 mb-4">
+    <section className="py-16 md:py-24">
+      <div className="container mx-auto px-4 md:px-6 lg:px-8">
+        <div className="text-center mb-12 md:mb-16 animate-slide-up">
+          <div className="inline-flex items-center gap-2 bg-secondary/10 border border-secondary/20 rounded-full px-4 py-2 mb-6 shadow-sm">
             <Sparkles className="h-4 w-4 text-secondary" />
-            <span className="text-sm font-medium text-secondary">
+            <span className="text-sm font-semibold text-secondary">
               Why Choose freequademy
             </span>
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Features that Make Learning <span className="bg-gradient-secondary bg-clip-text text-transparent">Enjoyable</span>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-4 md:mb-6">
+            Features that Make Learning{" "}
+            <span className="text-gradient-secondary">Enjoyable</span>
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-base md:text-lg lg:text-xl max-w-3xl mx-auto leading-relaxed">
             Experience education reimagined with gamification, AI-powered insights, and interactive content
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
           {features.map((feature, index) => (
             <Card 
               key={index} 
-              className="p-6 hover:shadow-xl transition-all duration-300 hover:scale-105 animate-scale-in"
-              style={{ animationDelay: `${index * 100}ms` }}
+              className="group glass-card hover-lift p-6 md:p-8 animate-scale-in"
+              style={{ animationDelay: `${index * 50}ms` }}
             >
-              <feature.icon className={`h-12 w-12 ${feature.color} mb-4`} />
-              <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-              <p className="text-muted-foreground">{feature.description}</p>
+              <div className={`p-3 md:p-4 rounded-xl w-fit mb-4 md:mb-6 group-hover:scale-110 transition-transform ${
+                feature.color === 'text-primary' ? 'bg-primary/10' :
+                feature.color === 'text-secondary' ? 'bg-secondary/10' :
+                'bg-success/10'
+              }`}>
+                <feature.icon className={`h-10 w-10 md:h-12 md:w-12 ${feature.color}`} />
+              </div>
+              <h3 className="text-lg md:text-xl font-bold mb-2 md:mb-3">{feature.title}</h3>
+              <p className="text-sm md:text-base text-muted-foreground leading-relaxed">{feature.description}</p>
             </Card>
           ))}
         </div>
 
-        <div className="mt-12 flex justify-center">
-          <Card className="flex flex-col sm:flex-row items-center gap-4 p-6 bg-gradient-card w-full sm:w-auto">
-            <Clock className="h-8 w-8 text-primary flex-shrink-0" />
-            <div className="text-center sm:text-left">
-              <h3 className="font-semibold">Limited Time Offer!</h3>
-              <p className="text-sm text-muted-foreground">Get 30 days free trial with full access</p>
+        <div className="mt-12 md:mt-16 flex justify-center">
+          <Card className="glass-card flex flex-col sm:flex-row items-center gap-4 md:gap-6 p-6 md:p-8 w-full max-w-3xl hover-lift">
+            <div className="p-3 md:p-4 bg-primary/10 rounded-xl">
+              <Clock className="h-8 w-8 md:h-10 md:w-10 text-primary flex-shrink-0" />
             </div>
-            <Button variant="gradient" className="w-full sm:w-auto">
+            <div className="flex-1 text-center sm:text-left">
+              <h3 className="text-lg md:text-xl font-bold mb-1 md:mb-2">Limited Time Offer!</h3>
+              <p className="text-sm md:text-base text-muted-foreground">
+                Get 30 days free trial with full access to all premium features
+              </p>
+            </div>
+            <Button variant="gradient" size="lg" className="w-full sm:w-auto shadow-lg hover:shadow-xl">
               Start Free Trial
             </Button>
           </Card>

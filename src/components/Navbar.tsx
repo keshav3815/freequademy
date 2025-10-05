@@ -90,46 +90,56 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2 hover:scale-105 transition-transform">
-            <BookOpen className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+    <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-sm">
+      <div className="container mx-auto px-4 md:px-6">
+        <div className="flex items-center justify-between h-16 md:h-20">
+          <Link to="/" className="flex items-center gap-2 group">
+            <div className="p-2 rounded-xl bg-gradient-primary group-hover:shadow-glow-sm transition-all">
+              <BookOpen className="h-5 w-5 md:h-6 md:w-6 text-white" />
+            </div>
+            <span className="text-lg md:text-xl font-bold text-gradient-primary">
               freequademy
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden lg:flex items-center gap-1">
             <Link
               to="/courses"
-              className={`font-medium transition-colors ${
-                isActive("/courses") ? "text-primary" : "text-muted-foreground hover:text-primary"
+              className={`font-medium px-3 py-2 rounded-lg transition-all ${
+                isActive("/courses") 
+                  ? "text-primary bg-primary/10" 
+                  : "text-foreground/70 hover:text-primary hover:bg-primary/5"
               }`}
             >
               Courses
             </Link>
             <Link
               to="/tests"
-              className={`font-medium transition-colors ${
-                isActive("/tests") ? "text-primary" : "text-muted-foreground hover:text-primary"
+              className={`font-medium px-3 py-2 rounded-lg transition-all ${
+                isActive("/tests") 
+                  ? "text-primary bg-primary/10" 
+                  : "text-foreground/70 hover:text-primary hover:bg-primary/5"
               }`}
             >
               Mock Tests
             </Link>
             <Link
               to="/mentorship"
-              className={`font-medium transition-colors ${
-                isActive("/mentorship") ? "text-primary" : "text-muted-foreground hover:text-primary"
+              className={`font-medium px-3 py-2 rounded-lg transition-all ${
+                isActive("/mentorship") 
+                  ? "text-primary bg-primary/10" 
+                  : "text-foreground/70 hover:text-primary hover:bg-primary/5"
               }`}
             >
               Mentorship
             </Link>
             <Link
               to="/community"
-              className={`font-medium transition-colors ${
-                isActive("/community") ? "text-primary" : "text-muted-foreground hover:text-primary"
+              className={`font-medium px-3 py-2 rounded-lg transition-all ${
+                isActive("/community") 
+                  ? "text-primary bg-primary/10" 
+                  : "text-foreground/70 hover:text-primary hover:bg-primary/5"
               }`}
             >
               Community
@@ -137,8 +147,10 @@ export default function Navbar() {
             {user && (
               <Link
                 to={getDashboardPath()}
-                className={`font-medium transition-colors ${
-                  isActive(getDashboardPath()) ? "text-primary" : "text-muted-foreground hover:text-primary"
+                className={`font-medium px-3 py-2 rounded-lg transition-all ${
+                  isActive(getDashboardPath()) 
+                    ? "text-primary bg-primary/10" 
+                    : "text-foreground/70 hover:text-primary hover:bg-primary/5"
                 }`}
               >
                 Dashboard
@@ -146,36 +158,40 @@ export default function Navbar() {
             )}
             <Link
               to="/pricing"
-              className={`font-medium transition-colors ${
-                isActive("/pricing") ? "text-primary" : "text-muted-foreground hover:text-primary"
+              className={`font-medium px-3 py-2 rounded-lg transition-all ${
+                isActive("/pricing") 
+                  ? "text-primary bg-primary/10" 
+                  : "text-foreground/70 hover:text-primary hover:bg-primary/5"
               }`}
             >
               Pricing
             </Link>
             <Link
               to="/donations"
-              className={`font-medium transition-colors ${
-                isActive("/donations") ? "text-primary" : "text-muted-foreground hover:text-primary"
+              className={`font-medium px-3 py-2 rounded-lg transition-all ${
+                isActive("/donations") 
+                  ? "text-primary bg-primary/10" 
+                  : "text-foreground/70 hover:text-primary hover:bg-primary/5"
               }`}
             >
               Donate
             </Link>
           </div>
 
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-3">
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="border-2 hover:border-primary/50">
                     {userRole === 'mentor' ? (
                       <GraduationCap className="h-4 w-4 mr-2" />
                     ) : (
                       <User className="h-4 w-4 mr-2" />
                     )}
-                    {user.email}
+                    <span className="max-w-32 truncate">{user.email}</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent align="end" className="w-56 bg-popover/95 backdrop-blur-xl border-border/50 shadow-xl">
                   <DropdownMenuItem asChild>
                     <Link to={getDashboardPath()} className="cursor-pointer">
                       <User className="h-4 w-4 mr-2" />
@@ -183,7 +199,7 @@ export default function Navbar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive">
                     <LogOut className="h-4 w-4 mr-2" />
                     Logout
                   </DropdownMenuItem>
@@ -192,18 +208,18 @@ export default function Navbar() {
             ) : (
               <>
                 <Link to="/login">
-                  <Button variant="outline" size="sm">
-                    <User className="h-4 w-4 mr-1" />
+                  <Button variant="outline" size="sm" className="border-2 hover:border-primary/50">
+                    <User className="h-4 w-4 mr-2" />
                     Login
                   </Button>
                 </Link>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="gradient" size="sm">
+                    <Button variant="gradient" size="sm" className="shadow-lg hover:shadow-xl">
                       Get Started
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+                  <DropdownMenuContent align="end" className="bg-popover/95 backdrop-blur-xl border-border/50 shadow-xl">
                     <DropdownMenuItem asChild>
                       <Link to="/signup-student" className="cursor-pointer">
                         <User className="h-4 w-4 mr-2" />
@@ -224,8 +240,9 @@ export default function Navbar() {
 
           {/* Mobile Menu Toggle */}
           <button
-            className="md:hidden"
+            className="lg:hidden p-2 hover:bg-muted rounded-lg transition-colors"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label="Toggle menu"
           >
             {isMenuOpen ? (
               <X className="h-6 w-6 text-foreground" />
@@ -237,32 +254,48 @@ export default function Navbar() {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden py-4 animate-slide-up">
-            <div className="flex flex-col gap-3">
+          <div className="lg:hidden py-4 animate-slide-up border-t border-border/50 bg-background/50 backdrop-blur-sm">
+            <div className="flex flex-col gap-2">
               <Link
                 to="/courses"
-                className="font-medium text-muted-foreground hover:text-primary transition-colors"
+                className={`font-medium px-4 py-3 rounded-lg transition-all ${
+                  isActive("/courses") 
+                    ? "text-primary bg-primary/10" 
+                    : "text-foreground/80 hover:text-primary hover:bg-primary/5"
+                }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Courses
               </Link>
               <Link
                 to="/tests"
-                className="font-medium text-muted-foreground hover:text-primary transition-colors"
+                className={`font-medium px-4 py-3 rounded-lg transition-all ${
+                  isActive("/tests") 
+                    ? "text-primary bg-primary/10" 
+                    : "text-foreground/80 hover:text-primary hover:bg-primary/5"
+                }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Mock Tests
               </Link>
               <Link
                 to="/mentorship"
-                className="font-medium text-muted-foreground hover:text-primary transition-colors"
+                className={`font-medium px-4 py-3 rounded-lg transition-all ${
+                  isActive("/mentorship") 
+                    ? "text-primary bg-primary/10" 
+                    : "text-foreground/80 hover:text-primary hover:bg-primary/5"
+                }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Mentorship
               </Link>
               <Link
                 to="/community"
-                className="font-medium text-muted-foreground hover:text-primary transition-colors"
+                className={`font-medium px-4 py-3 rounded-lg transition-all ${
+                  isActive("/community") 
+                    ? "text-primary bg-primary/10" 
+                    : "text-foreground/80 hover:text-primary hover:bg-primary/5"
+                }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Community
@@ -270,7 +303,11 @@ export default function Navbar() {
               {user && (
                 <Link
                   to={getDashboardPath()}
-                  className="font-medium text-muted-foreground hover:text-primary transition-colors"
+                  className={`font-medium px-4 py-3 rounded-lg transition-all ${
+                    isActive(getDashboardPath()) 
+                      ? "text-primary bg-primary/10" 
+                      : "text-foreground/80 hover:text-primary hover:bg-primary/5"
+                  }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Dashboard
@@ -278,27 +315,35 @@ export default function Navbar() {
               )}
               <Link
                 to="/pricing"
-                className="font-medium text-muted-foreground hover:text-primary transition-colors"
+                className={`font-medium px-4 py-3 rounded-lg transition-all ${
+                  isActive("/pricing") 
+                    ? "text-primary bg-primary/10" 
+                    : "text-foreground/80 hover:text-primary hover:bg-primary/5"
+                }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Pricing
               </Link>
               <Link
                 to="/donations"
-                className="font-medium text-muted-foreground hover:text-primary transition-colors"
+                className={`font-medium px-4 py-3 rounded-lg transition-all ${
+                  isActive("/donations") 
+                    ? "text-primary bg-primary/10" 
+                    : "text-foreground/80 hover:text-primary hover:bg-primary/5"
+                }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Donate
               </Link>
-              <div className="flex flex-col gap-2 pt-3 border-t border-border">
+              <div className="flex flex-col gap-3 pt-4 mt-2 border-t border-border/50">
                 {user ? (
                   <>
-                    <div className="px-3 py-2 text-sm text-muted-foreground">
+                    <div className="px-4 py-3 text-sm text-muted-foreground bg-muted/50 rounded-lg">
                       {user.email}
                     </div>
                     <Button 
                       variant="outline" 
-                      className="w-full" 
+                      className="w-full border-2 hover:border-destructive/50 hover:text-destructive" 
                       size="sm" 
                       onClick={handleLogout}
                     >
@@ -308,18 +353,21 @@ export default function Navbar() {
                   </>
                 ) : (
                   <>
-                    <Link to="/login">
-                      <Button variant="outline" className="w-full" size="sm">
+                    <Link to="/login" className="w-full">
+                      <Button variant="outline" className="w-full border-2 hover:border-primary/50" size="sm">
+                        <User className="h-4 w-4 mr-2" />
                         Login
                       </Button>
                     </Link>
-                    <Link to="/signup-student">
-                      <Button variant="gradient" className="w-full" size="sm">
+                    <Link to="/signup-student" className="w-full">
+                      <Button variant="gradient" className="w-full shadow-lg" size="sm">
+                        <User className="h-4 w-4 mr-2" />
                         Sign up as Student
                       </Button>
                     </Link>
-                    <Link to="/signup-mentor">
-                      <Button variant="secondary" className="w-full" size="sm">
+                    <Link to="/signup-mentor" className="w-full">
+                      <Button variant="secondary" className="w-full shadow-md" size="sm">
+                        <GraduationCap className="h-4 w-4 mr-2" />
                         Sign up as Mentor
                       </Button>
                     </Link>
