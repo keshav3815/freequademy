@@ -9,6 +9,8 @@ import MockTests from "./pages/MockTests";
 import Dashboard from "./pages/Dashboard";
 import Pricing from "./pages/Pricing";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import SignupStudent from "./pages/SignupStudent";
@@ -36,6 +38,8 @@ const App = () => (
           <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           
           <Route path="/signup-student" element={<SignupStudent />} />
           <Route path="/signup-mentor" element={<SignupMentor />} />
