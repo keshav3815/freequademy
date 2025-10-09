@@ -126,6 +126,39 @@ export type Database = {
         }
         Relationships: []
       }
+      dashboard_content: {
+        Row: {
+          author_id: string | null
+          author_name: string
+          content_snippet: string
+          created_at: string | null
+          date_submitted: string | null
+          id: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          author_name: string
+          content_snippet: string
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string
+          content_snippet?: string
+          created_at?: string | null
+          date_submitted?: string | null
+          id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       donations: {
         Row: {
           amount: number
@@ -720,14 +753,102 @@ export type Database = {
           },
         ]
       }
+      user_activity_log: {
+        Row: {
+          action: string
+          id: string
+          metadata: Json | null
+          timestamp: string | null
+          user_id: string | null
+          user_name: string
+        }
+        Insert: {
+          action: string
+          id?: string
+          metadata?: Json | null
+          timestamp?: string | null
+          user_id?: string | null
+          user_name: string
+        }
+        Update: {
+          action?: string
+          id?: string
+          metadata?: Json | null
+          timestamp?: string | null
+          user_id?: string | null
+          user_name?: string
+        }
+        Relationships: []
+      }
+      user_reports: {
+        Row: {
+          content_link: string | null
+          created_at: string | null
+          id: string
+          reason: string
+          reported_by: string | null
+          reporter_name: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          content_link?: string | null
+          created_at?: string | null
+          id?: string
+          reason: string
+          reported_by?: string | null
+          reporter_name: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          content_link?: string | null
+          created_at?: string | null
+          id?: string
+          reason?: string
+          reported_by?: string | null
+          reporter_name?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
+      app_role: "admin" | "moderator"
       user_role: "student" | "mentor"
     }
     CompositeTypes: {
@@ -856,6 +977,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "moderator"],
       user_role: ["student", "mentor"],
     },
   },
