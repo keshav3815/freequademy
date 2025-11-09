@@ -8,8 +8,10 @@ import {
   BarChart, 
   Shield,
   Sparkles,
-  Clock
+  Clock,
+  Gamepad2
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const features = [
   {
@@ -51,6 +53,8 @@ const features = [
 ];
 
 export default function Features() {
+  const navigate = useNavigate();
+
   return (
     <section className="py-16 md:py-24">
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
@@ -88,6 +92,39 @@ export default function Features() {
               <p className="text-sm md:text-base text-muted-foreground leading-relaxed">{feature.description}</p>
             </Card>
           ))}
+        </div>
+
+        {/* Gamified Learning Section */}
+        <div className="mt-16 md:mt-20">
+          <div className="text-center mb-8 md:mb-12">
+            <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2 mb-4 shadow-sm">
+              <Gamepad2 className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold text-primary">
+                Gamified Learning
+              </span>
+            </div>
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-extrabold mb-3">
+              Learn Through <span className="text-gradient-primary">Interactive Games</span>
+            </h2>
+            <p className="text-muted-foreground text-base md:text-lg max-w-2xl mx-auto">
+              Make learning fun with educational games designed to reinforce concepts
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            <Card className="glass-card hover-lift p-6 group cursor-pointer" onClick={() => navigate('/game/guess-number')}>
+              <div className="p-4 bg-primary/10 rounded-xl w-fit mb-4 group-hover:scale-110 transition-transform">
+                <Gamepad2 className="h-10 w-10 text-primary" />
+              </div>
+              <h3 className="text-lg md:text-xl font-bold mb-2">Guess the Number</h3>
+              <p className="text-sm md:text-base text-muted-foreground mb-4">
+                Test your logical thinking and number sense in this fun guessing game
+              </p>
+              <Button variant="outline" size="sm" className="w-full">
+                Play Now
+              </Button>
+            </Card>
+          </div>
         </div>
 
         <div className="mt-12 md:mt-16 flex justify-center">

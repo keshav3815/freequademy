@@ -21,6 +21,7 @@ import MentorDashboard from "./pages/MentorDashboard";
 import Community from "./pages/Community";
 import Donations from "./pages/Donations";
 import AdminPanel from "./pages/AdminPanel";
+import GuessNumberGame from "./pages/GuessNumberGame";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ const App = () => (
           <Route path="/community" element={<Community />} />
           <Route path="/donations" element={<Donations />} />
           <Route path="/admin/*" element={<AdminPanel />} />
+          <Route path="/game/guess-number" element={<GuessNumberGame />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
