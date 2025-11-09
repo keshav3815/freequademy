@@ -2,23 +2,62 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ArrowLeft, Zap, Target, Flame } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+
+type Difficulty = 'easy' | 'medium' | 'hard';
+
+interface DifficultyConfig {
+  min: number;
+  max: number;
+  label: string;
+  icon: typeof Zap;
+  color: string;
+  badgeColor: string;
+}
+
+const difficultyConfig: Record<Difficulty, DifficultyConfig> = {
+  easy: {
+    min: 1,
+    max: 50,
+    label: 'Easy',
+    icon: Zap,
+    color: 'text-success',
+    badgeColor: 'bg-success/10 text-success border-success/20'
+  },
+  medium: {
+    min: 1,
+    max: 100,
+    label: 'Medium',
+    icon: Target,
+    color: 'text-primary',
+    badgeColor: 'bg-primary/10 text-primary border-primary/20'
+  },
+  hard: {
+    min: 1,
+    max: 500,
+    label: 'Hard',
+    icon: Flame,
+    color: 'text-destructive',
+    badgeColor: 'bg-destructive/10 text-destructive border-destructive/20'
+  }
+};
 
 const GuessNumberGame = () => {
   const navigate = useNavigate();
+  const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
   const [secretNumber, setSecretNumber] = useState(0);
   const [guessCount, setGuessCount] = useState(0);
   const [userGuess, setUserGuess] = useState('');
   const [message, setMessage] = useState('Take a guess!');
   const [messageColor, setMessageColor] = useState('text-foreground');
   const [gameOver, setGameOver] = useState(false);
-  
-  const minNum = 1;
-  const maxNum = 100;
 
-  const initializeGame = () => {
-    setSecretNumber(Math.floor(Math.random() * (maxNum - minNum + 1)) + minNum);
+  const initializeGame = (selectedDifficulty: Difficulty) => {
+    const config = difficultyConfig[selectedDifficulty];
+    setDifficulty(selectedDifficulty);
+    setSecretNumber(Math.floor(Math.random() * (config.max - config.min + 1)) + config.min);
     setGuessCount(0);
     setUserGuess('');
     setMessage('Take a guess!');
@@ -26,15 +65,19 @@ const GuessNumberGame = () => {
     setGameOver(false);
   };
 
-  useEffect(() => {
-    initializeGame();
-  }, []);
+  const resetToMenu = () => {
+    setDifficulty(null);
+    setGameOver(false);
+  };
 
   const checkGuess = () => {
+    if (!difficulty) return;
+    
+    const config = difficultyConfig[difficulty];
     const guess = parseInt(userGuess);
 
-    if (isNaN(guess) || guess < minNum || guess > maxNum) {
-      setMessage(`Please enter a number between ${minNum} and ${maxNum}.`);
+    if (isNaN(guess) || guess < config.min || guess > config.max) {
+      setMessage(`Please enter a number between ${config.min} and ${config.max}.`);
       setMessageColor('text-destructive');
       return;
     }
@@ -63,25 +106,97 @@ const GuessNumberGame = () => {
     }
   };
 
+  // Difficulty Selection Screen
+  if (!difficulty) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="glass-card p-8 w-full max-w-2xl mx-4 shadow-2xl">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/')}
+            className="mb-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Home
+          </Button>
+
+          <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">
+            Guess the Number! 🔢
+          </h1>
+
+          <p className="text-center text-muted-foreground mb-8 text-lg">
+            Choose your difficulty level to start playing
+          </p>
+
+          <div className="grid gap-4 md:gap-6">
+            {(Object.keys(difficultyConfig) as Difficulty[]).map((diff) => {
+              const config = difficultyConfig[diff];
+              const Icon = config.icon;
+              
+              return (
+                <Card
+                  key={diff}
+                  className="p-6 cursor-pointer hover-lift group hover:border-primary/50 transition-all"
+                  onClick={() => initializeGame(diff)}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`p-3 rounded-xl ${
+                      diff === 'easy' ? 'bg-success/10' :
+                      diff === 'medium' ? 'bg-primary/10' :
+                      'bg-destructive/10'
+                    } group-hover:scale-110 transition-transform`}>
+                      <Icon className={`h-8 w-8 ${config.color}`} />
+                    </div>
+                    
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold mb-1">{config.label}</h3>
+                      <p className="text-muted-foreground">
+                        Numbers from {config.min} to {config.max}
+                      </p>
+                    </div>
+                    
+                    <Button variant="outline" size="sm">
+                      Play
+                    </Button>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  const config = difficultyConfig[difficulty];
+  const DifficultyIcon = config.icon;
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="glass-card p-8 w-full max-w-md mx-4 shadow-2xl">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate('/')}
-          className="mb-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Home
-        </Button>
+        <div className="flex items-center justify-between mb-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={resetToMenu}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Change Level
+          </Button>
+          
+          <Badge className={`${config.badgeColor} border`}>
+            <DifficultyIcon className="h-3 w-3 mr-1" />
+            {config.label}
+          </Badge>
+        </div>
 
         <h1 className="text-3xl font-bold text-center mb-2">
           Guess the Number! 🔢
         </h1>
 
         <p className="text-center text-muted-foreground mb-6">
-          I'm thinking of a number between {minNum} and {maxNum}.
+          I'm thinking of a number between {config.min} and {config.max}.
         </p>
 
         {!gameOver ? (
@@ -93,8 +208,8 @@ const GuessNumberGame = () => {
               onKeyDown={handleKeyPress}
               placeholder="Enter your guess"
               className="text-center text-lg mb-4"
-              min={minNum}
-              max={maxNum}
+              min={config.min}
+              max={config.max}
             />
 
             <Button
@@ -107,14 +222,24 @@ const GuessNumberGame = () => {
             </Button>
           </div>
         ) : (
-          <Button
-            onClick={initializeGame}
-            variant="success"
-            className="w-full text-lg"
-            size="lg"
-          >
-            Play Again
-          </Button>
+          <div className="space-y-3">
+            <Button
+              onClick={() => initializeGame(difficulty)}
+              variant="success"
+              className="w-full text-lg"
+              size="lg"
+            >
+              Play Again
+            </Button>
+            <Button
+              onClick={resetToMenu}
+              variant="outline"
+              className="w-full"
+              size="lg"
+            >
+              Change Difficulty
+            </Button>
+          </div>
         )}
 
         <p className={`text-center text-lg font-medium mt-6 h-12 ${messageColor}`}>
