@@ -125,7 +125,7 @@ const GuessNumberGame = () => {
             Guess the Number! 🔢
           </h1>
 
-          <p className="text-center text-muted-foreground mb-8 text-lg">
+          <p className="text-center text-muted-foreground mb-8 text-lg md:text-xl">
             Choose your difficulty level to start playing
           </p>
 
@@ -150,8 +150,8 @@ const GuessNumberGame = () => {
                     </div>
                     
                     <div className="flex-1">
-                      <h3 className="text-xl font-bold mb-1">{config.label}</h3>
-                      <p className="text-muted-foreground">
+                      <h3 className="text-xl md:text-2xl font-bold mb-1">{config.label}</h3>
+                      <p className="text-muted-foreground text-base">
                         Numbers from {config.min} to {config.max}
                       </p>
                     </div>
@@ -191,11 +191,11 @@ const GuessNumberGame = () => {
           </Badge>
         </div>
 
-        <h1 className="text-3xl font-bold text-center mb-2">
+        <h1 className="text-3xl md:text-4xl font-bold text-center mb-2">
           Guess the Number! 🔢
         </h1>
 
-        <p className="text-center text-muted-foreground mb-6">
+        <p className="text-center text-muted-foreground mb-6 text-lg">
           I'm thinking of a number between {config.min} and {config.max}.
         </p>
 
@@ -242,7 +242,7 @@ const GuessNumberGame = () => {
           </div>
         )}
 
-        <p className={`text-center text-lg font-medium mt-6 h-12 ${messageColor}`}>
+        <p className={`text-center text-xl font-semibold mt-6 min-h-12 ${messageColor}`}>
           {message}
         </p>
       </Card>
