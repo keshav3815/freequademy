@@ -3,26 +3,25 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Star, Users, Trophy, BookOpen, GraduationCap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-
 export default function Hero() {
   const [userCounts, setUserCounts] = useState({
     total_users: 0,
     student_count: 0,
-    mentor_count: 0,
+    mentor_count: 0
   });
-
   useEffect(() => {
     const fetchUserCounts = async () => {
-      const { data, error } = await supabase.rpc('get_user_counts');
+      const {
+        data,
+        error
+      } = await supabase.rpc('get_user_counts');
       if (!error && data && data.length > 0) {
         setUserCounts(data[0]);
       }
     };
     fetchUserCounts();
   }, []);
-
-  return (
-    <section className="relative min-h-[85vh] md:min-h-[90vh] flex items-center overflow-hidden py-12 md:py-0">
+  return <section className="relative min-h-[85vh] md:min-h-[90vh] flex items-center overflow-hidden py-12 md:py-0">
       {/* Enhanced Background */}
       <div className="absolute inset-0 bg-gradient-accent" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(262_83%_58%/0.15),transparent_50%)]" />
@@ -40,12 +39,7 @@ export default function Hero() {
         <div className="grid lg:grid-cols-2 gap-8 md:gap-12 lg:gap-16 items-center">
           {/* Left Content */}
           <div className="animate-slide-up space-y-6 md:space-y-8">
-            <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2 shadow-sm">
-              <Star className="h-4 w-4 text-primary fill-primary" />
-              <span className="text-sm font-semibold text-primary">
-                Trusted by 50,000+ Students
-              </span>
-            </div>
+            
 
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold leading-tight">
               Learn, Practice & 
@@ -154,6 +148,5 @@ export default function Hero() {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 }
