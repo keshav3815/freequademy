@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, BookOpen, LogOut, User, GraduationCap } from "lucide-react";
+import { Menu, X, LogOut, User, GraduationCap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import freequademyLogo from "@/assets/freequademy-logo.png";
 import { useToast } from "@/components/ui/use-toast";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import {
@@ -94,12 +95,11 @@ export default function Navbar() {
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between h-16 md:h-20">
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="p-2 rounded-xl bg-gradient-primary group-hover:shadow-glow-sm transition-all">
-              <BookOpen className="h-5 w-5 md:h-6 md:w-6 text-white" />
-            </div>
-            <span className="text-lg md:text-xl font-bold text-gradient-primary">
-              freequademy
-            </span>
+            <img 
+              src={freequademyLogo} 
+              alt="freequademy" 
+              className="h-10 md:h-12 w-auto object-contain"
+            />
           </Link>
 
           {/* Desktop Navigation */}
