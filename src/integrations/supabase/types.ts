@@ -839,6 +839,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_counts: {
+        Args: never
+        Returns: {
+          mentor_count: number
+          student_count: number
+          total_users: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
