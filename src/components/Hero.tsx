@@ -109,38 +109,38 @@ export default function Hero() {
 
           {/* Right Content - Feature Cards */}
           <div className="grid grid-cols-2 gap-3 md:gap-4 lg:gap-5 animate-fade-in">
-            <div className="glass-card rounded-2xl p-4 md:p-6 hover-lift group">
-              <div className="p-2 md:p-3 bg-primary/10 rounded-xl w-fit mb-3 md:mb-4 group-hover:bg-primary/20 transition-colors">
-                <BookOpen className="h-8 w-8 md:h-10 md:w-10 text-primary" />
+            <div className="glass-card rounded-2xl p-4 md:p-6 group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl hover:-translate-y-1 hover:border-primary/30">
+              <div className="p-2 md:p-3 bg-primary/10 rounded-xl w-fit mb-3 md:mb-4 group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-300">
+                <BookOpen className="h-8 w-8 md:h-10 md:w-10 text-primary group-hover:rotate-6 transition-transform duration-300" />
               </div>
-              <h3 className="font-semibold text-sm md:text-base mb-1 md:mb-2">Interactive Lessons</h3>
+              <h3 className="font-semibold text-sm md:text-base mb-1 md:mb-2 group-hover:text-primary transition-colors duration-300">Interactive Lessons</h3>
               <p className="text-xs md:text-sm text-muted-foreground">
                 Animated videos and visual learning
               </p>
             </div>
-            <div className="glass-card rounded-2xl p-4 md:p-6 hover-lift group animate-delay-100">
-              <div className="p-2 md:p-3 bg-secondary/10 rounded-xl w-fit mb-3 md:mb-4 group-hover:bg-secondary/20 transition-colors">
-                <Trophy className="h-8 w-8 md:h-10 md:w-10 text-secondary" />
+            <div className="glass-card rounded-2xl p-4 md:p-6 group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl hover:-translate-y-1 hover:border-secondary/30 animate-delay-100">
+              <div className="p-2 md:p-3 bg-secondary/10 rounded-xl w-fit mb-3 md:mb-4 group-hover:bg-secondary/20 group-hover:scale-110 transition-all duration-300">
+                <Trophy className="h-8 w-8 md:h-10 md:w-10 text-secondary group-hover:rotate-12 transition-transform duration-300" />
               </div>
-              <h3 className="font-semibold text-sm md:text-base mb-1 md:mb-2">Gamified Learning</h3>
+              <h3 className="font-semibold text-sm md:text-base mb-1 md:mb-2 group-hover:text-secondary transition-colors duration-300">Gamified Learning</h3>
               <p className="text-xs md:text-sm text-muted-foreground">
                 Earn XP, badges, and rewards
               </p>
             </div>
-            <div className="glass-card rounded-2xl p-4 md:p-6 hover-lift group animate-delay-200">
-              <div className="p-2 md:p-3 bg-success/10 rounded-xl w-fit mb-3 md:mb-4 group-hover:bg-success/20 transition-colors">
-                <Users className="h-8 w-8 md:h-10 md:w-10 text-success" />
+            <div className="glass-card rounded-2xl p-4 md:p-6 group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl hover:-translate-y-1 hover:border-success/30 animate-delay-200">
+              <div className="p-2 md:p-3 bg-success/10 rounded-xl w-fit mb-3 md:mb-4 group-hover:bg-success/20 group-hover:scale-110 transition-all duration-300">
+                <Users className="h-8 w-8 md:h-10 md:w-10 text-success group-hover:scale-110 transition-transform duration-300" />
               </div>
-              <h3 className="font-semibold text-sm md:text-base mb-1 md:mb-2">Live Sessions</h3>
+              <h3 className="font-semibold text-sm md:text-base mb-1 md:mb-2 group-hover:text-success transition-colors duration-300">Live Sessions</h3>
               <p className="text-xs md:text-sm text-muted-foreground">
                 Real-time doubt clearing
               </p>
             </div>
-            <div className="glass-card rounded-2xl p-4 md:p-6 hover-lift group animate-delay-300">
-              <div className="p-2 md:p-3 bg-primary/10 rounded-xl w-fit mb-3 md:mb-4 group-hover:bg-primary/20 transition-colors">
-                <Star className="h-8 w-8 md:h-10 md:w-10 text-primary fill-primary" />
+            <div className="glass-card rounded-2xl p-4 md:p-6 group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl hover:-translate-y-1 hover:border-primary/30 animate-delay-300">
+              <div className="p-2 md:p-3 bg-primary/10 rounded-xl w-fit mb-3 md:mb-4 group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-300">
+                <Star className="h-8 w-8 md:h-10 md:w-10 text-primary fill-primary group-hover:rotate-45 transition-transform duration-300" />
               </div>
-              <h3 className="font-semibold text-sm md:text-base mb-1 md:mb-2">Performance Track</h3>
+              <h3 className="font-semibold text-sm md:text-base mb-1 md:mb-2 group-hover:text-primary transition-colors duration-300">Performance Track</h3>
               <p className="text-xs md:text-sm text-muted-foreground">
                 Detailed analytics & insights
               </p>
