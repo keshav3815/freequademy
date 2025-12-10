@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, LogOut, User, GraduationCap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import freequademyLogo from "@/assets/freequademy-logo.png";
+import freequademyLogo from "@/assets/freequademy-logo-new.jpg";
 import { useToast } from "@/components/ui/use-toast";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import {
@@ -98,8 +98,11 @@ export default function Navbar() {
             <img 
               src={freequademyLogo} 
               alt="freequademy" 
-              className="h-10 md:h-12 w-auto object-contain"
+              className="h-10 md:h-12 w-10 md:w-12 rounded-full object-cover border-2 border-primary/20 shadow-sm"
             />
+            <span className="text-lg md:text-xl font-bold text-gradient-primary">
+              freequademy
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
