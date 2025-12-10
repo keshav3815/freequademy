@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { BookOpen, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube } from "lucide-react";
+import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube } from "lucide-react";
+import freequademyLogo from "@/assets/freequademy-logo-new.jpg";
 
 export default function Footer() {
   return (
@@ -9,9 +10,11 @@ export default function Footer() {
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-1">
             <Link to="/" className="inline-flex items-center gap-2 mb-4 group">
-              <div className="p-2 rounded-xl bg-gradient-primary group-hover:shadow-glow-sm transition-all">
-                <BookOpen className="h-6 w-6 text-white" />
-              </div>
+              <img 
+                src={freequademyLogo} 
+                alt="freequademy" 
+                className="h-10 w-10 rounded-full object-cover border-2 border-primary/20 shadow-sm group-hover:shadow-glow-sm transition-all"
+              />
               <span className="text-xl font-bold text-gradient-primary">
                 freequademy
               </span>
