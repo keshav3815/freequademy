@@ -213,7 +213,7 @@ export default function TeacherDashboard() {
 
             <Dialog>
               <DialogTrigger asChild>
-                <Button className="bg-gradient">
+                <Button variant="gradient">
                   <Upload className="h-4 w-4 mr-2" />
                   Upload Content
                 </Button>
