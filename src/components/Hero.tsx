@@ -41,9 +41,9 @@ export default function Hero() {
           <div className="animate-slide-up space-y-6 md:space-y-8">
             
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold leading-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight">
               Learn, Practice & 
-              <span className="block mt-2 text-gradient-primary">
+              <span className="block mt-2 text-gradient-primary text-4xl sm:text-5xl md:text-6xl lg:text-7xl">
                 Excel Together
               </span>
             </h1>
@@ -137,8 +137,8 @@ export default function Hero() {
               </p>
             </div>
             <div className="glass-card rounded-2xl p-4 md:p-6 hover-lift group animate-delay-300">
-              <div className="p-2 md:p-3 bg-accent/10 rounded-xl w-fit mb-3 md:mb-4 group-hover:bg-accent/20 transition-colors">
-                <Star className="h-8 w-8 md:h-10 md:w-10 text-accent fill-accent" />
+              <div className="p-2 md:p-3 bg-primary/10 rounded-xl w-fit mb-3 md:mb-4 group-hover:bg-primary/20 transition-colors">
+                <Star className="h-8 w-8 md:h-10 md:w-10 text-primary fill-primary" />
               </div>
               <h3 className="font-semibold text-sm md:text-base mb-1 md:mb-2">Performance Track</h3>
               <p className="text-xs md:text-sm text-muted-foreground">
