@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Mail, Phone, MapPin } from "lucide-react";
-import { FaFacebookF, FaInstagram, FaYoutube } from "react-icons/fa";
+import { FaFacebookF, FaInstagram, FaYoutube, FaLinkedinIn } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
 import freequademyLogo from "@/assets/freequademy-logo.png";
 
@@ -36,6 +36,9 @@ export default function Footer() {
               </a>
               <a href="#" className="p-2 rounded-lg bg-[#FF0000] hover:bg-[#FF0000]/80 text-white transition-all">
                 <FaYoutube className="h-5 w-5" />
+              </a>
+              <a href="#" className="p-2 rounded-lg bg-[#0A66C2] hover:bg-[#0A66C2]/80 text-white transition-all">
+                <FaLinkedinIn className="h-5 w-5" />
               </a>
             </div>
           </div>
