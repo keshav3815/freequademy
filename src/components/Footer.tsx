@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube } from "lucide-react";
-import freequademyLogo from "@/assets/freequademy-logo-new.jpg";
+import freequademyLogo from "@/assets/freequademy-logo.png";
 
 export default function Footer() {
   return (

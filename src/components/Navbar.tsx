@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, LogOut, User, GraduationCap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import freequademyLogo from "@/assets/freequademy-logo-new.jpg";
+import freequademyLogo from "@/assets/freequademy-logo.png";
 import { useToast } from "@/components/ui/use-toast";
 import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import {
