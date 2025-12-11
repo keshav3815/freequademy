@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
-import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube } from "lucide-react";
+import { Mail, Phone, MapPin } from "lucide-react";
+import { FaFacebookF, FaInstagram, FaYoutube } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
 import freequademyLogo from "@/assets/freequademy-logo.png";
 
 export default function Footer() {
@@ -23,17 +25,17 @@ export default function Footer() {
               Empowering students with gamified learning experiences for Classes 6-12
             </p>
             <div className="flex gap-3">
-              <a href="#" className="p-2 rounded-lg bg-muted hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all">
-                <Facebook className="h-5 w-5" />
+              <a href="#" className="p-2 rounded-lg bg-[#1877F2] hover:bg-[#1877F2]/80 text-white transition-all">
+                <FaFacebookF className="h-5 w-5" />
               </a>
-              <a href="#" className="p-2 rounded-lg bg-muted hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all">
-                <Twitter className="h-5 w-5" />
+              <a href="#" className="p-2 rounded-lg bg-black hover:bg-black/80 text-white transition-all">
+                <FaXTwitter className="h-5 w-5" />
               </a>
-              <a href="#" className="p-2 rounded-lg bg-muted hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all">
-                <Instagram className="h-5 w-5" />
+              <a href="#" className="p-2 rounded-lg bg-gradient-to-br from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] hover:opacity-80 text-white transition-all">
+                <FaInstagram className="h-5 w-5" />
               </a>
-              <a href="#" className="p-2 rounded-lg bg-muted hover:bg-secondary/10 text-muted-foreground hover:text-secondary transition-all">
-                <Youtube className="h-5 w-5" />
+              <a href="#" className="p-2 rounded-lg bg-[#FF0000] hover:bg-[#FF0000]/80 text-white transition-all">
+                <FaYoutube className="h-5 w-5" />
               </a>
             </div>
           </div>
