@@ -10,19 +10,19 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
   Trophy,
-  Target,
   Flame,
   Star,
   Award,
   TrendingUp,
-  Clock,
-  BookOpen,
   Zap,
   Medal,
   Crown,
   Shield,
   Loader2,
-  Calendar
+  Calendar,
+  Target,
+  Clock,
+  BookOpen
 } from "lucide-react";
 
 // Dashboard Components
@@ -33,6 +33,11 @@ import SubjectProgress from "@/components/dashboard/SubjectProgress";
 import Leaderboard from "@/components/dashboard/Leaderboard";
 import RevisionPlanner from "@/components/dashboard/RevisionPlanner";
 import SmartTests from "@/components/dashboard/SmartTests";
+import DoubtSolver from "@/components/dashboard/DoubtSolver";
+import UpcomingSchedule from "@/components/dashboard/UpcomingSchedule";
+import MentorWidget from "@/components/dashboard/MentorWidget";
+import CommunityWidget from "@/components/dashboard/CommunityWidget";
+import AnalyticsWidget from "@/components/dashboard/AnalyticsWidget";
 
 const badges = [
   { icon: Flame, name: "7 Day Streak", earned: true, color: "text-orange-500" },
@@ -157,148 +162,115 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <section className="py-8 md:py-12">
+      <section className="py-6 md:py-10">
         <div className="container mx-auto px-4">
-          {/* Header */}
-          <div className="mb-6 animate-slide-up">
-            <h1 className="text-2xl md:text-4xl font-bold mb-2">
-              Welcome back, <span className="bg-gradient-primary bg-clip-text text-transparent">
-                {userName}!
-              </span>
-            </h1>
-            <p className="text-muted-foreground flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              Class {currentGrade} - Track your progress and achievements
-            </p>
-          </div>
-
-          {/* Today's Progress Bar */}
-          <Card className="p-4 mb-6 animate-fade-in bg-gradient-to-r from-primary/5 to-secondary/5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium">Today's Learning Progress</span>
-              <span className="text-sm text-muted-foreground">{dayProgress}% of day completed</span>
+          
+          {/* ========== TOP SECTION ========== */}
+          {/* Welcome + XP/Level/Streak + Progress Bar */}
+          <div className="mb-8">
+            {/* Welcome Header with Quick Stats */}
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4 animate-slide-up">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold mb-1">
+                  Welcome back, <span className="bg-gradient-primary bg-clip-text text-transparent">{userName}!</span>
+                </h1>
+                <p className="text-muted-foreground flex items-center gap-2 text-sm">
+                  <Calendar className="h-4 w-4" />
+                  Class {currentGrade} Dashboard
+                </p>
+              </div>
+              
+              {/* XP, Level, Streak Badges */}
+              <div className="flex flex-wrap gap-3 animate-fade-in">
+                <Card className="px-4 py-2 flex items-center gap-2">
+                  <div className="p-1.5 rounded-full bg-primary/10">
+                    <Star className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Level</p>
+                    <p className="font-bold">{level}</p>
+                  </div>
+                </Card>
+                <Card className="px-4 py-2 flex items-center gap-2">
+                  <div className="p-1.5 rounded-full bg-yellow-500/10">
+                    <Zap className="h-4 w-4 text-yellow-500" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">XP</p>
+                    <p className="font-bold">{xp}/{nextLevelXp}</p>
+                  </div>
+                </Card>
+                <Card className="px-4 py-2 flex items-center gap-2">
+                  <div className="p-1.5 rounded-full bg-orange-500/10">
+                    <Flame className="h-4 w-4 text-orange-500" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Streak</p>
+                    <p className="font-bold">{streak} days</p>
+                  </div>
+                </Card>
+              </div>
             </div>
-            <Progress value={65} className="h-2" />
-            <p className="text-xs text-muted-foreground mt-2">You've completed 3 lessons and 2 quizzes today. Keep going!</p>
-          </Card>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
-            <Card className="p-4 md:p-6 animate-scale-in">
-              <div className="flex items-center justify-between mb-3">
-                <Zap className="h-6 md:h-8 w-6 md:w-8 text-primary" />
-                <Badge variant="secondary" className="text-xs">{streak} days</Badge>
+            {/* Today's Learning Progress Bar */}
+            <Card className="p-4 bg-gradient-to-r from-primary/5 to-secondary/5 animate-fade-in">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Today's Learning Progress</span>
+                <span className="text-sm text-primary font-semibold">65%</span>
               </div>
-              <h3 className="font-semibold text-sm md:text-lg">Current Streak</h3>
-              <p className="text-xs text-muted-foreground">Keep it going!</p>
-            </Card>
-
-            <Card className="p-4 md:p-6 animate-scale-in" style={{ animationDelay: "100ms" }}>
-              <div className="flex items-center justify-between mb-3">
-                <Target className="h-6 md:h-8 w-6 md:w-8 text-green-500" />
-                <span className="text-xl md:text-2xl font-bold">87%</span>
-              </div>
-              <h3 className="font-semibold text-sm md:text-lg">Avg. Score</h3>
-              <p className="text-xs text-muted-foreground text-green-500">+5% from last week</p>
-            </Card>
-
-            <Card className="p-4 md:p-6 animate-scale-in" style={{ animationDelay: "200ms" }}>
-              <div className="flex items-center justify-between mb-3">
-                <Clock className="h-6 md:h-8 w-6 md:w-8 text-orange-500" />
-                <span className="text-xl md:text-2xl font-bold">24h</span>
-              </div>
-              <h3 className="font-semibold text-sm md:text-lg">Time Spent</h3>
-              <p className="text-xs text-muted-foreground">This week</p>
-            </Card>
-
-            <Card className="p-4 md:p-6 animate-scale-in" style={{ animationDelay: "300ms" }}>
-              <div className="flex items-center justify-between mb-3">
-                <BookOpen className="h-6 md:h-8 w-6 md:w-8 text-blue-500" />
-                <span className="text-xl md:text-2xl font-bold">156</span>
-              </div>
-              <h3 className="font-semibold text-sm md:text-lg">Lessons Done</h3>
-              <p className="text-xs text-muted-foreground">12 this week</p>
+              <Progress value={65} className="h-2.5" />
+              <p className="text-xs text-muted-foreground mt-2">3 lessons & 2 quizzes completed. Keep it up!</p>
             </Card>
           </div>
 
           {/* Quick Access Shortcuts */}
-          <div className="mb-6">
+          <div className="mb-8">
             <QuickAccessShortcuts />
           </div>
 
-          {/* Main Content Grid */}
-          <div className="grid lg:grid-cols-3 gap-6 mb-6">
-            {/* Left Column - Level & Continue Learning */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Level Progress */}
-              <Card className="p-6 animate-fade-in">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h2 className="text-xl font-semibold mb-1">Level {level}</h2>
-                    <p className="text-sm text-muted-foreground">
-                      {xp}/{nextLevelXp} XP to Level {level + 1}
-                    </p>
-                  </div>
-                  <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                    {Math.floor((xp / nextLevelXp) * 100)}%
-                  </div>
-                </div>
-                <Progress value={(xp / nextLevelXp) * 100} className="h-3" />
-                <div className="flex flex-wrap gap-2 justify-between mt-4">
-                  <Badge variant="outline">
-                    <TrendingUp className="h-3 w-3 mr-1" />
-                    Top 15% in Class {currentGrade}
-                  </Badge>
-                  <Button variant="gradient" size="sm">
-                    View Leaderboard
-                  </Button>
-                </div>
-              </Card>
-
-              {/* Subject Progress */}
-              <SubjectProgress grade={currentGrade} />
-
-              {/* Recent Activity */}
-              <Card className="p-6 animate-fade-in">
-                <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
-                <div className="space-y-3">
-                  {currentActivities.map((activity, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-all">
-                      <div>
-                        <h3 className="font-medium">{activity.subject}</h3>
-                        <p className="text-sm text-muted-foreground">{activity.chapter}</p>
-                      </div>
-                      <div className="text-right">
-                        <div className={`font-semibold text-lg ${
-                          activity.score >= 90 ? 'text-green-500' : 
-                          activity.score >= 70 ? 'text-yellow-500' : 'text-red-500'
-                        }`}>
-                          {activity.score}%
-                        </div>
-                        <p className="text-xs text-muted-foreground">{activity.time}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            </div>
-
-            {/* Right Column - Daily Challenge & Continue Learning */}
-            <div className="space-y-6">
-              <DailyChallenge grade={currentGrade} />
-              <ContinueLearningWidget grade={currentGrade} />
-            </div>
+          {/* ========== MIDDLE SECTION ========== */}
+          {/* Continue Learning + Subjects Overview + Upcoming Schedule */}
+          <div className="grid lg:grid-cols-3 gap-6 mb-8">
+            {/* Continue Learning */}
+            <ContinueLearningWidget grade={currentGrade} />
+            
+            {/* Subject Progress Overview */}
+            <SubjectProgress grade={currentGrade} />
+            
+            {/* Upcoming Tests/Classes */}
+            <UpcomingSchedule grade={currentGrade} />
           </div>
 
-          {/* Second Row - Gamification & Planning */}
-          <div className="grid lg:grid-cols-3 gap-6 mb-6">
+          {/* ========== BOTTOM SECTION ========== */}
+          {/* Analytics + Leaderboard + Doubt Solver + Mentor + Community */}
+          <div className="grid lg:grid-cols-3 gap-6 mb-8">
+            {/* Analytics Widget */}
+            <AnalyticsWidget grade={currentGrade} />
+            
             {/* Leaderboard */}
             <Leaderboard grade={currentGrade} userName={userName} />
             
-            {/* Smart Tests */}
-            <SmartTests grade={currentGrade} />
+            {/* Doubt Solver */}
+            <DoubtSolver grade={currentGrade} />
+          </div>
+
+          {/* Mentor & Community Row */}
+          <div className="grid lg:grid-cols-3 gap-6 mb-8">
+            {/* Mentor Widget */}
+            <MentorWidget />
             
-            {/* Revision Planner */}
+            {/* Community Widget */}
+            <CommunityWidget grade={currentGrade} />
+            
+            {/* Daily Challenge + Smart Tests */}
+            <div className="space-y-6">
+              <DailyChallenge grade={currentGrade} />
+            </div>
+          </div>
+
+          {/* Additional Tools Row */}
+          <div className="grid lg:grid-cols-2 gap-6 mb-8">
+            <SmartTests grade={currentGrade} />
             <RevisionPlanner grade={currentGrade} />
           </div>
 
