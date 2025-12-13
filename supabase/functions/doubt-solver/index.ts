@@ -11,12 +11,14 @@ serve(async (req) => {
   }
 
   try {
-    const { question, subject, grade } = await req.json();
+    const { question, subject, grade, image } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
+
+    console.log(`Processing doubt for grade ${grade}, has image: ${!!image}`);
 
     const systemPrompt = `You are an expert academic tutor helping students with their doubts. 
 You are assisting a student in grade ${grade || "high school"}.
@@ -27,9 +29,25 @@ Guidelines:
 - Use simple language appropriate for the student's grade level
 - Include examples when helpful
 - If it's a math problem, show the working
+- If an image is provided, analyze it carefully (math problems, diagrams, equations, graphs, etc.)
+- Provide step-by-step solutions when solving problems from images
 - Be encouraging and supportive
 - Keep answers concise but thorough
 - Use markdown formatting for better readability`;
+
+    // Build user message content - support both text and image
+    const userContent: any[] = [];
+    
+    if (question) {
+      userContent.push({ type: "text", text: question });
+    }
+    
+    if (image) {
+      userContent.push({
+        type: "image_url",
+        image_url: { url: image }
+      });
+    }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -41,7 +59,7 @@ Guidelines:
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: question },
+          { role: "user", content: userContent.length === 1 && !image ? question : userContent },
         ],
       }),
     });
@@ -71,6 +89,8 @@ Guidelines:
 
     const data = await response.json();
     const answer = data.choices?.[0]?.message?.content || "Sorry, I couldn't generate a response.";
+
+    console.log("Successfully generated response");
 
     return new Response(JSON.stringify({ answer }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

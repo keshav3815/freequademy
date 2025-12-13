@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,7 +11,9 @@ import {
   User,
   Bot,
   ArrowRight,
-  Loader2
+  Loader2,
+  X,
+  Image as ImageIcon
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -32,10 +34,48 @@ export default function DoubtSolver({ grade }: DoubtSolverProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [currentAnswer, setCurrentAnswer] = useState<string | null>(null);
   const [recentDoubts, setRecentDoubts] = useState<RecentDoubt[]>([]);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file",
+        description: "Please upload an image file.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please upload an image smaller than 5MB.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setUploadedImage(event.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = () => {
+    setUploadedImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const handleSubmit = async () => {
-    if (!doubt.trim()) return;
+    if (!doubt.trim() && !uploadedImage) return;
     
     setIsLoading(true);
     setCurrentAnswer(null);
@@ -43,9 +83,10 @@ export default function DoubtSolver({ grade }: DoubtSolverProps) {
     try {
       const { data, error } = await supabase.functions.invoke('doubt-solver', {
         body: { 
-          question: doubt, 
+          question: doubt || "Please analyze this image and help me understand it.", 
           grade: grade,
-          subject: "General" 
+          subject: "General",
+          image: uploadedImage
         }
       });
 
@@ -62,13 +103,17 @@ export default function DoubtSolver({ grade }: DoubtSolverProps) {
       
       // Add to recent doubts
       setRecentDoubts(prev => [{
-        question: doubt,
+        question: doubt || "Image analysis",
         answer: answer,
         status: "answered",
         subject: "General"
       }, ...prev.slice(0, 4)]);
       
       setDoubt("");
+      setUploadedImage(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     } catch (error: any) {
       console.error("Error getting AI response:", error);
       toast({
@@ -101,6 +146,25 @@ export default function DoubtSolver({ grade }: DoubtSolverProps) {
       </div>
 
       <div className="space-y-4">
+        {/* Image Preview */}
+        {uploadedImage && (
+          <div className="relative inline-block">
+            <img 
+              src={uploadedImage} 
+              alt="Uploaded" 
+              className="max-h-32 rounded-lg border border-border"
+            />
+            <Button
+              variant="destructive"
+              size="icon"
+              className="absolute -top-2 -right-2 h-6 w-6"
+              onClick={removeImage}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        )}
+
         <div className="relative">
           <Textarea
             placeholder="Ask your doubt here... (e.g., How to factorize polynomials?)"
@@ -110,15 +174,28 @@ export default function DoubtSolver({ grade }: DoubtSolverProps) {
             className="min-h-[80px] pr-20 resize-none"
             disabled={isLoading}
           />
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleImageUpload}
+            accept="image/*"
+            className="hidden"
+          />
           <div className="absolute bottom-2 right-2 flex gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8" disabled={isLoading}>
-              <Upload className="h-4 w-4" />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8" 
+              disabled={isLoading}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <ImageIcon className="h-4 w-4" />
             </Button>
             <Button 
               size="icon" 
               className="h-8 w-8"
               onClick={handleSubmit}
-              disabled={!doubt.trim() || isLoading}
+              disabled={(!doubt.trim() && !uploadedImage) || isLoading}
             >
               {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
