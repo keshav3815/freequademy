@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,9 +15,9 @@ import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Settings, Video, Clock, User, Upload, Calendar as CalendarIcon, 
-  PhoneCall, BookOpen, FileText, GraduationCap, StickyNote
+  PhoneCall, BookOpen, FileText, GraduationCap, StickyNote, Loader2
 } from "lucide-react";
-import { format, isSameDay } from "date-fns";
+import { format, isSameDay, isAfter, isBefore, addMinutes } from "date-fns";
 import { toast } from "sonner";
 import NotificationBell from "@/components/teacher/NotificationBell";
 import GoLiveButton from "@/components/teacher/GoLiveButton";
@@ -26,6 +26,7 @@ import PendingDoubts from "@/components/teacher/PendingDoubts";
 import MyContent from "@/components/teacher/MyContent";
 import TeacherStats from "@/components/teacher/TeacherStats";
 import SessionFeedback from "@/components/teacher/SessionFeedback";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Session {
   id: string;
@@ -41,58 +42,6 @@ interface Session {
   reason?: string;
 }
 
-const mockSessions: Session[] = [
-  {
-    id: "1",
-    studentName: "John Doe",
-    studentClass: "Class 10",
-    subject: "Mathematics",
-    date: new Date(),
-    time: "10:00 AM",
-    duration: "45 min",
-    type: "Mentorship",
-    status: "upcoming",
-    isLive: true,
-    reason: "Career guidance in STEM",
-  },
-  {
-    id: "2",
-    studentName: "Sarah Smith",
-    studentClass: "Class 12",
-    subject: "Physics",
-    date: new Date(Date.now() + 86400000),
-    time: "2:00 PM",
-    duration: "30 min",
-    type: "Doubt",
-    status: "upcoming",
-    reason: "Help with Newton's Laws",
-  },
-  {
-    id: "3",
-    studentName: "Mike Johnson",
-    studentClass: "Class 11",
-    subject: "Chemistry",
-    date: new Date(Date.now() + 172800000),
-    time: "11:00 AM",
-    duration: "45 min",
-    type: "Mentorship",
-    status: "pending",
-    reason: "Weekly mentorship session",
-  },
-  {
-    id: "4",
-    studentName: "Emily Brown",
-    studentClass: "Class 9",
-    subject: "Mathematics",
-    date: new Date(Date.now() - 172800000),
-    time: "3:00 PM",
-    duration: "30 min",
-    type: "Doubt",
-    status: "past",
-    reason: "Quadratic equations",
-  },
-];
-
 export default function TeacherDashboard() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -105,6 +54,77 @@ export default function TeacherDashboard() {
     duration: "All Durations",
   });
   const [showDaySessions, setShowDaySessions] = useState(false);
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchSessions();
+  }, []);
+
+  const fetchSessions = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      const { data: sessionsData, error } = await supabase
+        .from("mentorship_sessions")
+        .select(`
+          id,
+          title,
+          description,
+          scheduled_at,
+          duration_minutes,
+          session_type,
+          status,
+          mentor_id
+        `)
+        .eq("mentor_id", user.id)
+        .order("scheduled_at", { ascending: true });
+
+      if (error) throw error;
+
+      const transformedSessions: Session[] = (sessionsData || []).map((s) => {
+        const scheduledDate = new Date(s.scheduled_at);
+        const now = new Date();
+        const sessionEnd = addMinutes(scheduledDate, s.duration_minutes);
+        
+        let status: "upcoming" | "pending" | "past" = "upcoming";
+        if (isBefore(sessionEnd, now)) {
+          status = "past";
+        } else if (s.status === "pending") {
+          status = "pending";
+        }
+
+        const isLive = status === "upcoming" && 
+          isAfter(now, addMinutes(scheduledDate, -15)) && 
+          isBefore(now, sessionEnd);
+
+        return {
+          id: s.id,
+          studentName: s.title.replace("Session with ", ""),
+          studentClass: "Class 10",
+          subject: s.session_type === "academic" ? "Mathematics" : "Career Guidance",
+          date: scheduledDate,
+          time: format(scheduledDate, "h:mm a"),
+          duration: `${s.duration_minutes} min`,
+          type: s.session_type === "mentorship" ? "Mentorship" : "Doubt",
+          status,
+          isLive,
+          reason: s.description || undefined,
+        };
+      });
+
+      setSessions(transformedSessions);
+    } catch (error) {
+      console.error("Error fetching sessions:", error);
+      toast.error("Failed to load sessions");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -146,8 +166,8 @@ export default function TeacherDashboard() {
     toast.success("Joining session...", { description: "Opening video call" });
   };
 
-  const filterSessions = (sessions: Session[]) => {
-    return sessions.filter((session) => {
+  const filterSessions = (sessionsList: Session[]) => {
+    return sessionsList.filter((session) => {
       if (filters.subject !== "All Subjects" && session.subject !== filters.subject) return false;
       if (filters.class !== "All Classes" && session.studentClass !== filters.class) return false;
       if (filters.sessionType !== "All Types" && session.type !== filters.sessionType) return false;
@@ -157,11 +177,11 @@ export default function TeacherDashboard() {
   };
 
   const getSessionsForDate = (date: Date) => {
-    return mockSessions.filter((s) => isSameDay(s.date, date));
+    return sessions.filter((s) => isSameDay(s.date, date));
   };
 
   const selectedDateSessions = selectedDate ? getSessionsForDate(selectedDate) : [];
-  const hasUpcomingSession = mockSessions.some((s) => s.status === "upcoming" && s.isLive);
+  const hasUpcomingSession = sessions.some((s) => s.status === "upcoming" && s.isLive);
 
   const SessionCard = ({ session }: { session: Session }) => (
     <Card className="hover:shadow-lg transition-shadow">
@@ -408,37 +428,55 @@ export default function TeacherDashboard() {
               <CardContent>
                 <SessionFilters filters={filters} onFilterChange={setFilters} />
                 
-                <Tabs defaultValue="upcoming" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="upcoming">
-                      Upcoming ({filterSessions(mockSessions.filter(s => s.status === "upcoming")).length})
-                    </TabsTrigger>
-                    <TabsTrigger value="pending">
-                      Pending ({filterSessions(mockSessions.filter(s => s.status === "pending")).length})
-                    </TabsTrigger>
-                    <TabsTrigger value="past">
-                      Past ({filterSessions(mockSessions.filter(s => s.status === "past")).length})
-                    </TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="upcoming" className="space-y-4 mt-4">
-                    {filterSessions(mockSessions.filter((s) => s.status === "upcoming")).map((session) => (
-                      <SessionCard key={session.id} session={session} />
-                    ))}
-                  </TabsContent>
-                  
-                  <TabsContent value="pending" className="space-y-4 mt-4">
-                    {filterSessions(mockSessions.filter((s) => s.status === "pending")).map((session) => (
-                      <SessionCard key={session.id} session={session} />
-                    ))}
-                  </TabsContent>
-                  
-                  <TabsContent value="past" className="space-y-4 mt-4">
-                    {filterSessions(mockSessions.filter((s) => s.status === "past")).map((session) => (
-                      <SessionCard key={session.id} session={session} />
-                    ))}
-                  </TabsContent>
-                </Tabs>
+                {loading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <Tabs defaultValue="upcoming" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3">
+                      <TabsTrigger value="upcoming">
+                        Upcoming ({filterSessions(sessions.filter(s => s.status === "upcoming")).length})
+                      </TabsTrigger>
+                      <TabsTrigger value="pending">
+                        Pending ({filterSessions(sessions.filter(s => s.status === "pending")).length})
+                      </TabsTrigger>
+                      <TabsTrigger value="past">
+                        Past ({filterSessions(sessions.filter(s => s.status === "past")).length})
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="upcoming" className="space-y-4 mt-4">
+                      {filterSessions(sessions.filter((s) => s.status === "upcoming")).length > 0 ? (
+                        filterSessions(sessions.filter((s) => s.status === "upcoming")).map((session) => (
+                          <SessionCard key={session.id} session={session} />
+                        ))
+                      ) : (
+                        <p className="text-center text-muted-foreground py-8">No upcoming sessions</p>
+                      )}
+                    </TabsContent>
+                    
+                    <TabsContent value="pending" className="space-y-4 mt-4">
+                      {filterSessions(sessions.filter((s) => s.status === "pending")).length > 0 ? (
+                        filterSessions(sessions.filter((s) => s.status === "pending")).map((session) => (
+                          <SessionCard key={session.id} session={session} />
+                        ))
+                      ) : (
+                        <p className="text-center text-muted-foreground py-8">No pending sessions</p>
+                      )}
+                    </TabsContent>
+                    
+                    <TabsContent value="past" className="space-y-4 mt-4">
+                      {filterSessions(sessions.filter((s) => s.status === "past")).length > 0 ? (
+                        filterSessions(sessions.filter((s) => s.status === "past")).map((session) => (
+                          <SessionCard key={session.id} session={session} />
+                        ))
+                      ) : (
+                        <p className="text-center text-muted-foreground py-8">No past sessions</p>
+                      )}
+                    </TabsContent>
+                  </Tabs>
+                )}
               </CardContent>
             </Card>
 
@@ -486,7 +524,7 @@ export default function TeacherDashboard() {
                   }}
                   className="rounded-md border pointer-events-auto"
                   modifiers={{
-                    booked: mockSessions.map((s) => s.date),
+                    booked: sessions.map((s) => s.date),
                   }}
                   modifiersStyles={{
                     booked: {
