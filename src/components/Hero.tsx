@@ -10,9 +10,18 @@ export default function Hero() {
     mentor_count: 0
   });
   const fetchUserCounts = async () => {
-    const { data, error } = await supabase.rpc('get_user_counts');
-    if (!error && data && data.length > 0) {
-      setUserCounts(data[0]);
+    try {
+      const { data, error } = await supabase.rpc('get_user_counts');
+      console.log('User counts response:', { data, error });
+      if (error) {
+        console.error('Error fetching user counts:', error);
+        return;
+      }
+      if (data && data.length > 0) {
+        setUserCounts(data[0]);
+      }
+    } catch (err) {
+      console.error('Exception fetching user counts:', err);
     }
   };
 
