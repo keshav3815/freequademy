@@ -40,6 +40,27 @@ export default function PendingDoubts() {
 
   useEffect(() => {
     fetchDoubts();
+
+    // Set up real-time subscription for new doubts
+    const doubtsChannel = supabase
+      .channel('pending-doubts-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'forum_threads'
+        },
+        (payload) => {
+          console.log('Doubt change received:', payload);
+          fetchDoubts(); // Refetch on any change
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(doubtsChannel);
+    };
   }, []);
 
   const fetchDoubts = async () => {

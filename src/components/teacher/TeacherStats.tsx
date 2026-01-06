@@ -17,6 +17,44 @@ export default function TeacherStats() {
 
   useEffect(() => {
     fetchStats();
+
+    // Set up real-time subscriptions for stats updates
+    const sessionsChannel = supabase
+      .channel('stats-sessions-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'mentorship_sessions'
+        },
+        () => {
+          console.log('Stats: Session change detected');
+          fetchStats();
+        }
+      )
+      .subscribe();
+
+    const doubtsChannel = supabase
+      .channel('stats-doubts-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'forum_threads'
+        },
+        () => {
+          console.log('Stats: Doubt change detected');
+          fetchStats();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(sessionsChannel);
+      supabase.removeChannel(doubtsChannel);
+    };
   }, []);
 
   const fetchStats = async () => {

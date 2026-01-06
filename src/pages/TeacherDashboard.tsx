@@ -59,6 +59,34 @@ export default function TeacherDashboard() {
 
   useEffect(() => {
     fetchSessions();
+
+    // Set up real-time subscription for sessions
+    const sessionsChannel = supabase
+      .channel('teacher-sessions-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'mentorship_sessions'
+        },
+        (payload) => {
+          console.log('Session change received:', payload);
+          fetchSessions(); // Refetch on any change
+          
+          // Show toast notification for new sessions
+          if (payload.eventType === 'INSERT') {
+            toast.info("New session scheduled!", { description: "Your calendar has been updated" });
+          } else if (payload.eventType === 'UPDATE') {
+            toast.info("Session updated", { description: "A session has been modified" });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(sessionsChannel);
+    };
   }, []);
 
   const fetchSessions = async () => {
