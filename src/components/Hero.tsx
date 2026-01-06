@@ -9,17 +9,36 @@ export default function Hero() {
     student_count: 0,
     mentor_count: 0
   });
+  const fetchUserCounts = async () => {
+    const { data, error } = await supabase.rpc('get_user_counts');
+    if (!error && data && data.length > 0) {
+      setUserCounts(data[0]);
+    }
+  };
+
   useEffect(() => {
-    const fetchUserCounts = async () => {
-      const {
-        data,
-        error
-      } = await supabase.rpc('get_user_counts');
-      if (!error && data && data.length > 0) {
-        setUserCounts(data[0]);
-      }
-    };
     fetchUserCounts();
+
+    // Real-time subscription for live stats updates
+    const profilesChannel = supabase
+      .channel('homepage-user-stats')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles'
+        },
+        () => {
+          console.log('New user activity detected, updating stats...');
+          fetchUserCounts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(profilesChannel);
+    };
   }, []);
   return <section className="relative min-h-[85vh] md:min-h-[90vh] flex items-center overflow-hidden py-12 md:py-0">
       {/* Enhanced Background */}
