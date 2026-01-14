@@ -23,7 +23,6 @@ interface MentorshipProgram {
 interface MentorProfile {
   id: string;
   full_name: string;
-  email: string;
   bio: string;
   expertise: string[];
   qualification: string;
@@ -71,22 +70,22 @@ export default function Mentorship() {
       if (programsError) throw programsError;
       setPrograms((programsData || []) as MentorshipProgram[]);
 
-      // Fetch verified mentors
+      // Fetch verified mentors (using public view to protect emails)
       const { data: mentorsData, error: mentorsError } = await supabase
-        .from('mentors')
+        .from('mentors_public')
         .select('*')
         .eq('is_verified', true)
         .order('rating', { ascending: false });
 
       if (mentorsError) throw mentorsError;
-      setMentors(mentorsData || []);
+      setMentors((mentorsData || []) as MentorProfile[]);
 
-      // Fetch upcoming sessions with mentor details
+      // Fetch upcoming sessions with mentor details (using public view)
       const { data: sessionsData, error: sessionsError } = await supabase
         .from('mentorship_sessions')
         .select(`
           *,
-          mentor:mentors(*)
+          mentor:mentors_public(*)
         `)
         .eq('status', 'scheduled')
         .gte('scheduled_at', new Date().toISOString())
