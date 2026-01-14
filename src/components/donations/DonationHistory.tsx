@@ -24,10 +24,10 @@ const DonationHistory = () => {
 
   const fetchDonations = async () => {
     try {
+      // Use donations_public view to hide sensitive payment data
       const { data, error } = await supabase
-        .from('donations')
+        .from('donations_public')
         .select('id, donor_name, amount, created_at')
-        .eq('status', 'successful')
         .order('created_at', { ascending: false })
         .limit(10);
 

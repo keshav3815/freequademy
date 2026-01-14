@@ -850,6 +850,30 @@ export type Database = {
       }
     }
     Views: {
+      donations_public: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          donor_name: string | null
+          id: string | null
+          status: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string | null
+          donor_name?: string | null
+          id?: string | null
+          status?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string | null
+          donor_name?: string | null
+          id?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       mentors_public: {
         Row: {
           availability_hours: Json | null
