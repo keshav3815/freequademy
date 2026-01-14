@@ -102,8 +102,9 @@ export const MentorShowcase = () => {
   useEffect(() => {
     const fetchMentors = async () => {
       try {
+        // Use mentors_public view to protect email addresses
         const { data, error } = await supabase
-          .from("mentors")
+          .from("mentors_public")
           .select("*")
           .eq("is_verified", true)
           .order("rating", { ascending: false })

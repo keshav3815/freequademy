@@ -484,6 +484,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "mentorship_feedback_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "mentors_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "mentorship_feedback_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
@@ -580,6 +587,13 @@ export type Database = {
             columns: ["mentor_id"]
             isOneToOne: false
             referencedRelation: "mentors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentorship_sessions_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "mentors_public"
             referencedColumns: ["id"]
           },
           {
@@ -836,7 +850,54 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      mentors_public: {
+        Row: {
+          availability_hours: Json | null
+          bio: string | null
+          created_at: string | null
+          experience_years: number | null
+          expertise: string[] | null
+          full_name: string | null
+          id: string | null
+          is_verified: boolean | null
+          is_volunteer: boolean | null
+          qualification: string | null
+          rating: number | null
+          total_sessions: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          availability_hours?: Json | null
+          bio?: string | null
+          created_at?: string | null
+          experience_years?: number | null
+          expertise?: string[] | null
+          full_name?: string | null
+          id?: string | null
+          is_verified?: boolean | null
+          is_volunteer?: boolean | null
+          qualification?: string | null
+          rating?: number | null
+          total_sessions?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          availability_hours?: Json | null
+          bio?: string | null
+          created_at?: string | null
+          experience_years?: number | null
+          expertise?: string[] | null
+          full_name?: string | null
+          id?: string | null
+          is_verified?: boolean | null
+          is_volunteer?: boolean | null
+          qualification?: string | null
+          rating?: number | null
+          total_sessions?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_user_counts: {
