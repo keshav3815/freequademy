@@ -19,7 +19,7 @@ import Mentorship from "./pages/Mentorship";
 import MentorApplication from "./pages/MentorApplication";
 import MentorDashboard from "./pages/MentorDashboard";
 import Community from "./pages/Community";
-import Donations from "./pages/Donations";
+
 import AdminPanel from "./pages/AdminPanel";
 import GuessNumberGame from "./pages/GuessNumberGame";
 
@@ -48,7 +48,7 @@ const App = () => (
           <Route path="/mentor-application" element={<MentorApplication />} />
           <Route path="/mentor-dashboard" element={<MentorDashboard />} />
           <Route path="/community" element={<Community />} />
-          <Route path="/donations" element={<Donations />} />
+          
           <Route path="/admin/*" element={<AdminPanel />} />
           <Route path="/game/guess-number" element={<GuessNumberGame />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -169,16 +169,6 @@ export default function Navbar() {
             >
               Pricing
             </Link>
-            <Link
-              to="/donations"
-              className={`font-medium px-3 py-2 rounded-lg transition-all ${
-                isActive("/donations") 
-                  ? "text-primary bg-primary/10" 
-                  : "text-foreground/70 hover:text-primary hover:bg-primary/5"
-              }`}
-            >
-              Donate
-            </Link>
           </div>
 
           <div className="hidden lg:flex items-center gap-3">
@@ -326,17 +316,6 @@ export default function Navbar() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Pricing
-              </Link>
-              <Link
-                to="/donations"
-                className={`font-medium px-4 py-3 rounded-lg transition-all ${
-                  isActive("/donations") 
-                    ? "text-primary bg-primary/10" 
-                    : "text-foreground/80 hover:text-primary hover:bg-primary/5"
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Donate
               </Link>
               <div className="flex flex-col gap-3 pt-4 mt-2 border-t border-border/50">
                 {user ? (
