@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      blog_posts: {
+        Row: {
+          author_id: string | null
+          author_name: string
+          chapter: string
+          class_level: string
+          concept_explanation: string
+          created_at: string
+          id: string
+          introduction: string
+          motivational_line: string
+          practice_questions: Json
+          quick_tips: string[]
+          read_time_minutes: number | null
+          real_life_example: string
+          slug: string
+          status: string
+          subject: string
+          summary_points: string[]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          author_name: string
+          chapter: string
+          class_level: string
+          concept_explanation: string
+          created_at?: string
+          id?: string
+          introduction: string
+          motivational_line: string
+          practice_questions?: Json
+          quick_tips?: string[]
+          read_time_minutes?: number | null
+          real_life_example: string
+          slug: string
+          status?: string
+          subject: string
+          summary_points?: string[]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string
+          chapter?: string
+          class_level?: string
+          concept_explanation?: string
+          created_at?: string
+          id?: string
+          introduction?: string
+          motivational_line?: string
+          practice_questions?: Json
+          quick_tips?: string[]
+          read_time_minutes?: number | null
+          real_life_example?: string
+          slug?: string
+          status?: string
+          subject?: string
+          summary_points?: string[]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       club_members: {
         Row: {
           club_id: string
