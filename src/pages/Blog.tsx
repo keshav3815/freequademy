@@ -2,79 +2,136 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Plus } from "lucide-react";
+import { useEffect, useState } from "react";
 
-const blogPosts = [
-  {
-    id: "newton-laws-motion",
-    title: "Newton's Laws of Motion - Samjho Asaan Tarike Se",
-    subject: "Science",
-    class: "Class 9",
-    chapter: "Force and Laws of Motion",
-    excerpt: "Newton ke teen laws ko samjho bilkul simple examples ke saath...",
-    readTime: "5 min read",
-  },
-  {
-    id: "photosynthesis",
-    title: "Photosynthesis - Plants Khana Kaise Banate Hain?",
-    subject: "Biology",
-    class: "Class 10",
-    chapter: "Life Processes",
-    excerpt: "Jaano plants apna food kaise prepare karte hain sunlight se...",
-    readTime: "4 min read",
-  },
-  {
-    id: "quadratic-equations",
-    title: "Quadratic Equations - Step by Step Solution",
-    subject: "Maths",
-    class: "Class 10",
-    chapter: "Quadratic Equations",
-    excerpt: "Quadratic equations solve karna seekho aasan steps mein...",
-    readTime: "6 min read",
-  },
-];
+interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  subject: string;
+  class_level: string;
+  chapter: string;
+  introduction: string;
+  read_time_minutes: number;
+}
 
 const Blog = () => {
+  const [isMentor, setIsMentor] = useState(false);
+
+  useEffect(() => {
+    const checkMentorStatus = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+        setIsMentor(profile?.role === "mentor");
+      }
+    };
+    checkMentorStatus();
+  }, []);
+
+  const { data: blogPosts, isLoading } = useQuery({
+    queryKey: ["blog-posts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("blog_posts")
+        .select("id, title, slug, subject, class_level, chapter, introduction, read_time_minutes")
+        .eq("status", "published")
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      return data as BlogPost[];
+    },
+  });
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       
       <main className="container mx-auto px-4 py-8">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-foreground mb-4">
-            Freequademy Blog
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            NCERT-aligned study content in simple Hinglish. Padho, samjho, aur exam mein best karo!
-          </p>
+        <div className="flex justify-between items-start mb-12">
+          <div className="text-center flex-1">
+            <h1 className="text-4xl font-bold text-foreground mb-4">
+              Freequademy Blog
+            </h1>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              NCERT-aligned study content in simple Hinglish. Padho, samjho, aur exam mein best karo!
+            </p>
+          </div>
+          {isMentor && (
+            <Link to="/blog/create">
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Post
+              </Button>
+            </Link>
+          )}
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {blogPosts.map((post) => (
-            <Link key={post.id} to={`/blog/${post.id}`}>
-              <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary">
+        {isLoading ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="h-full">
                 <CardHeader>
                   <div className="flex gap-2 mb-2">
-                    <Badge variant="secondary">{post.class}</Badge>
-                    <Badge variant="outline">{post.subject}</Badge>
+                    <Skeleton className="h-5 w-16" />
+                    <Skeleton className="h-5 w-16" />
                   </div>
-                  <CardTitle className="text-lg leading-tight">
-                    {post.title}
-                  </CardTitle>
+                  <Skeleton className="h-6 w-full" />
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground text-sm mb-3">
-                    {post.excerpt}
-                  </p>
-                  <div className="flex justify-between items-center text-xs text-muted-foreground">
-                    <span>{post.chapter}</span>
-                    <span>{post.readTime}</span>
+                  <Skeleton className="h-16 w-full mb-3" />
+                  <div className="flex justify-between">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-16" />
                   </div>
                 </CardContent>
               </Card>
-            </Link>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : blogPosts && blogPosts.length > 0 ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {blogPosts.map((post) => (
+              <Link key={post.id} to={`/blog/${post.slug}`}>
+                <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary">
+                  <CardHeader>
+                    <div className="flex gap-2 mb-2">
+                      <Badge variant="secondary">{post.class_level}</Badge>
+                      <Badge variant="outline">{post.subject}</Badge>
+                    </div>
+                    <CardTitle className="text-lg leading-tight">
+                      {post.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
+                      {post.introduction}
+                    </p>
+                    <div className="flex justify-between items-center text-xs text-muted-foreground">
+                      <span>{post.chapter}</span>
+                      <span>{post.read_time_minutes} min read</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground text-lg">
+              Koi blog post abhi available nahi hai. Jaldi aayega!
+            </p>
+          </div>
+        )}
       </main>
 
       <Footer />
