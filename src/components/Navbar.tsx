@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogOut, User, GraduationCap } from "lucide-react";
+import { Menu, X, LogOut, User, GraduationCap, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import freequademyLogo from "@/assets/freequademy-logo.png";
 import { useToast } from "@/components/ui/use-toast";
@@ -146,6 +146,16 @@ export default function Navbar() {
               }`}
             >
               Community
+            </Link>
+            <Link
+              to="/blog"
+              className={`font-medium px-3 py-2 rounded-lg transition-all ${
+                isActive("/blog") 
+                  ? "text-primary bg-primary/10" 
+                  : "text-foreground/70 hover:text-primary hover:bg-primary/5"
+              }`}
+            >
+              Blog
             </Link>
             {user && (
               <Link
@@ -292,6 +302,17 @@ export default function Navbar() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Community
+              </Link>
+              <Link
+                to="/blog"
+                className={`font-medium px-4 py-3 rounded-lg transition-all ${
+                  isActive("/blog") 
+                    ? "text-primary bg-primary/10" 
+                    : "text-foreground/80 hover:text-primary hover:bg-primary/5"
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Blog
               </Link>
               {user && (
                 <Link
