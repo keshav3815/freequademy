@@ -25,6 +25,7 @@ import GuessNumberGame from "./pages/GuessNumberGame";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import BlogAdmin from "./pages/BlogAdmin";
+import BlogEdit from "./pages/BlogEdit";
 
 const queryClient = new QueryClient();
 
@@ -56,9 +57,9 @@ const App = () => (
           <Route path="/game/guess-number" element={<GuessNumberGame />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/create" element={<BlogAdmin />} />
+          <Route path="/blog/edit/:id" element={<BlogEdit />} />
           <Route path="/blog/:postId" element={<BlogPost />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
