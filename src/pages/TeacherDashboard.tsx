@@ -26,6 +26,7 @@ import PendingDoubts from "@/components/teacher/PendingDoubts";
 import MyContent from "@/components/teacher/MyContent";
 import TeacherStats from "@/components/teacher/TeacherStats";
 import SessionFeedback from "@/components/teacher/SessionFeedback";
+import MyBlogPosts from "@/components/teacher/MyBlogPosts";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Session {
@@ -507,6 +508,9 @@ export default function TeacherDashboard() {
                 )}
               </CardContent>
             </Card>
+
+            {/* My Blog Posts */}
+            <MyBlogPosts />
 
             {/* My Content & Pending Doubts Row */}
             <div className="grid md:grid-cols-2 gap-6">
