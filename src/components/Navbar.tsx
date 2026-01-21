@@ -169,16 +169,6 @@ export default function Navbar() {
                 Dashboard
               </Link>
             )}
-            <Link
-              to="/pricing"
-              className={`font-medium px-3 py-2 rounded-lg transition-all ${
-                isActive("/pricing") 
-                  ? "text-primary bg-primary/10" 
-                  : "text-foreground/70 hover:text-primary hover:bg-primary/5"
-              }`}
-            >
-              Pricing
-            </Link>
           </div>
 
           <div className="hidden lg:flex items-center gap-3">
@@ -327,17 +317,6 @@ export default function Navbar() {
                   Dashboard
                 </Link>
               )}
-              <Link
-                to="/pricing"
-                className={`font-medium px-4 py-3 rounded-lg transition-all ${
-                  isActive("/pricing") 
-                    ? "text-primary bg-primary/10" 
-                    : "text-foreground/80 hover:text-primary hover:bg-primary/5"
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Pricing
-              </Link>
               <div className="flex flex-col gap-3 pt-4 mt-2 border-t border-border/50">
                 {user ? (
                   <>

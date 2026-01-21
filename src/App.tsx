@@ -7,7 +7,7 @@ import Index from "./pages/Index";
 import Courses from "./pages/Courses";
 import MockTests from "./pages/MockTests";
 import Dashboard from "./pages/Dashboard";
-import Pricing from "./pages/Pricing";
+
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -41,7 +41,7 @@ const App = () => (
           <Route path="/tests" element={<MockTests />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
-          <Route path="/pricing" element={<Pricing />} />
+          
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
