@@ -31,7 +31,7 @@ export default function Footer() {
               <a href="#" className="p-2 rounded-lg bg-black hover:bg-black/80 text-white transition-all">
                 <FaXTwitter className="h-5 w-5" />
               </a>
-              <a href="#" className="p-2 rounded-lg bg-gradient-to-br from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] hover:opacity-80 text-white transition-all">
+              <a href="https://www.instagram.com/freequademy/" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-gradient-to-br from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] hover:opacity-80 text-white transition-all">
                 <FaInstagram className="h-5 w-5" />
               </a>
               <a href="#" className="p-2 rounded-lg bg-[#FF0000] hover:bg-[#FF0000]/80 text-white transition-all">
