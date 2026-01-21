@@ -8,7 +8,6 @@ import {
   BarChart, 
   Shield,
   Sparkles,
-  Clock,
   Gamepad2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -127,22 +126,6 @@ export default function Features() {
           </div>
         </div>
 
-        <div className="mt-12 md:mt-16 flex justify-center">
-          <Card className="glass-card flex flex-col sm:flex-row items-center gap-4 md:gap-6 p-6 md:p-8 w-full max-w-3xl hover-lift">
-            <div className="p-3 md:p-4 bg-primary/10 rounded-xl">
-              <Clock className="h-8 w-8 md:h-10 md:w-10 text-primary flex-shrink-0" />
-            </div>
-            <div className="flex-1 text-center sm:text-left">
-              <h3 className="text-lg md:text-xl font-bold mb-1 md:mb-2">Limited Time Offer!</h3>
-              <p className="text-sm md:text-base text-muted-foreground">
-                Get 30 days free trial with full access to all premium features
-              </p>
-            </div>
-            <Button variant="gradient" size="lg" className="w-full sm:w-auto shadow-lg hover:shadow-xl">
-              Start Free Trial
-            </Button>
-          </Card>
-        </div>
       </div>
     </section>
   );
