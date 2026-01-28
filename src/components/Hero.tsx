@@ -1,54 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowRight, Star, Users, Trophy, BookOpen, GraduationCap } from "lucide-react";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { ArrowRight, Star, Users, Trophy, BookOpen } from "lucide-react";
+
 export default function Hero() {
-  const [userCounts, setUserCounts] = useState({
-    total_users: 0,
-    student_count: 0,
-    mentor_count: 0
-  });
-  const fetchUserCounts = async () => {
-    try {
-      const { data, error } = await supabase.rpc('get_user_counts');
-      console.log('User counts response:', { data, error });
-      if (error) {
-        console.error('Error fetching user counts:', error);
-        return;
-      }
-      if (data && data.length > 0) {
-        setUserCounts(data[0]);
-      }
-    } catch (err) {
-      console.error('Exception fetching user counts:', err);
-    }
-  };
-
-  useEffect(() => {
-    fetchUserCounts();
-
-    // Real-time subscription for live stats updates
-    const profilesChannel = supabase
-      .channel('homepage-user-stats')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'profiles'
-        },
-        () => {
-          console.log('New user activity detected, updating stats...');
-          fetchUserCounts();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(profilesChannel);
-    };
-  }, []);
   return <section className="relative min-h-[85vh] md:min-h-[90vh] flex items-center overflow-hidden py-12 md:py-0">
       {/* Enhanced Background */}
       <div className="absolute inset-0 bg-gradient-accent" />
@@ -95,44 +49,6 @@ export default function Hero() {
               </Link>
             </div>
 
-            {/* Real User Stats */}
-            <div className="glass-card rounded-2xl p-4 md:p-6 mt-4">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="h-2 w-2 bg-success rounded-full animate-pulse" />
-                <span className="text-xs md:text-sm font-medium text-muted-foreground">
-                  Live Community Stats
-                </span>
-              </div>
-              <div className="grid grid-cols-3 gap-4 md:gap-6">
-                <div className="text-center">
-                  <div className="flex items-center justify-center gap-1 mb-1">
-                    <Users className="h-4 w-4 md:h-5 md:w-5 text-primary" />
-                  </div>
-                  <div className="text-2xl md:text-3xl lg:text-4xl font-bold text-primary">
-                    {userCounts.total_users.toLocaleString()}
-                  </div>
-                  <div className="text-xs md:text-sm text-muted-foreground mt-1">Total Users</div>
-                </div>
-                <div className="text-center">
-                  <div className="flex items-center justify-center gap-1 mb-1">
-                    <GraduationCap className="h-4 w-4 md:h-5 md:w-5 text-secondary" />
-                  </div>
-                  <div className="text-2xl md:text-3xl lg:text-4xl font-bold text-secondary">
-                    {userCounts.student_count.toLocaleString()}
-                  </div>
-                  <div className="text-xs md:text-sm text-muted-foreground mt-1">Students</div>
-                </div>
-                <div className="text-center">
-                  <div className="flex items-center justify-center gap-1 mb-1">
-                    <Star className="h-4 w-4 md:h-5 md:w-5 text-success fill-success" />
-                  </div>
-                  <div className="text-2xl md:text-3xl lg:text-4xl font-bold text-success">
-                    {userCounts.mentor_count.toLocaleString()}
-                  </div>
-                  <div className="text-xs md:text-sm text-muted-foreground mt-1">Mentors</div>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Right Content - Feature Cards */}
