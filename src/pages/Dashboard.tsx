@@ -28,16 +28,10 @@ import {
 // Dashboard Components
 import ContinueLearningWidget from "@/components/dashboard/ContinueLearningWidget";
 import QuickAccessShortcuts from "@/components/dashboard/QuickAccessShortcuts";
-import DailyChallenge from "@/components/dashboard/DailyChallenge";
 import SubjectProgress from "@/components/dashboard/SubjectProgress";
-import Leaderboard from "@/components/dashboard/Leaderboard";
 import RevisionPlanner from "@/components/dashboard/RevisionPlanner";
-import SmartTests from "@/components/dashboard/SmartTests";
 import DoubtSolver from "@/components/dashboard/DoubtSolver";
 import UpcomingSchedule from "@/components/dashboard/UpcomingSchedule";
-import MentorWidget from "@/components/dashboard/MentorWidget";
-import CommunityWidget from "@/components/dashboard/CommunityWidget";
-import AnalyticsWidget from "@/components/dashboard/AnalyticsWidget";
 
 const badges = [
   { icon: Flame, name: "7 Day Streak", earned: true, color: "text-orange-500" },
@@ -242,35 +236,12 @@ export default function Dashboard() {
           </div>
 
           {/* ========== BOTTOM SECTION ========== */}
-          {/* Analytics + Leaderboard + Doubt Solver + Mentor + Community */}
-          <div className="grid lg:grid-cols-3 gap-6 mb-8">
-            {/* Analytics Widget */}
-            <AnalyticsWidget grade={currentGrade} />
-            
-            {/* Leaderboard */}
-            <Leaderboard grade={currentGrade} userName={userName} />
-            
+          {/* Doubt Solver + Revision Planner */}
+          <div className="grid lg:grid-cols-2 gap-6 mb-8">
             {/* Doubt Solver */}
             <DoubtSolver grade={currentGrade} />
-          </div>
-
-          {/* Mentor & Community Row */}
-          <div className="grid lg:grid-cols-3 gap-6 mb-8">
-            {/* Mentor Widget */}
-            <MentorWidget />
             
-            {/* Community Widget */}
-            <CommunityWidget grade={currentGrade} />
-            
-            {/* Daily Challenge + Smart Tests */}
-            <div className="space-y-6">
-              <DailyChallenge grade={currentGrade} />
-            </div>
-          </div>
-
-          {/* Additional Tools Row */}
-          <div className="grid lg:grid-cols-2 gap-6 mb-8">
-            <SmartTests grade={currentGrade} />
+            {/* Revision Planner */}
             <RevisionPlanner grade={currentGrade} />
           </div>
 
