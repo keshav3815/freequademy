@@ -9,20 +9,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Trophy,
   Flame,
   Star,
-  Award,
-  TrendingUp,
   Zap,
-  Medal,
-  Crown,
-  Shield,
   Loader2,
-  Calendar,
-  Target,
-  Clock,
-  BookOpen
+  Calendar
 } from "lucide-react";
 
 // Dashboard Components
@@ -33,14 +24,6 @@ import RevisionPlanner from "@/components/dashboard/RevisionPlanner";
 import DoubtSolver from "@/components/dashboard/DoubtSolver";
 import UpcomingSchedule from "@/components/dashboard/UpcomingSchedule";
 
-const badges = [
-  { icon: Flame, name: "7 Day Streak", earned: true, color: "text-orange-500" },
-  { icon: Star, name: "First Perfect Score", earned: true, color: "text-yellow-500" },
-  { icon: Trophy, name: "Top Performer", earned: false, color: "text-primary" },
-  { icon: Crown, name: "Quiz Master", earned: false, color: "text-purple-500" },
-  { icon: Shield, name: "Consistency Hero", earned: true, color: "text-blue-500" },
-  { icon: Medal, name: "100 Questions", earned: true, color: "text-green-500" },
-];
 
 // Grade-specific recent activity
 const getRecentActivityByGrade = (grade: string) => {
@@ -245,38 +228,6 @@ export default function Dashboard() {
             <RevisionPlanner grade={currentGrade} />
           </div>
 
-          {/* Achievements Section */}
-          <Card className="p-6 animate-fade-in">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold flex items-center gap-2">
-                <Award className="h-5 w-5 text-yellow-500" />
-                Achievements
-              </h2>
-              <Button variant="outline" size="sm">View All</Button>
-            </div>
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-3 md:gap-4">
-              {badges.map((badge, index) => (
-                <div
-                  key={index}
-                  className={`flex flex-col items-center p-3 md:p-4 rounded-lg border-2 transition-all ${
-                    badge.earned
-                      ? "border-primary bg-primary/5 hover:scale-105"
-                      : "border-border bg-muted/20 opacity-50"
-                  }`}
-                >
-                  <badge.icon className={`h-6 md:h-8 w-6 md:w-8 mb-2 ${badge.earned ? badge.color : "text-muted-foreground"}`} />
-                  <span className="text-xs text-center font-medium line-clamp-2">
-                    {badge.name}
-                  </span>
-                  {badge.earned && (
-                    <Badge variant="secondary" className="mt-2 text-xs">
-                      Earned
-                    </Badge>
-                  )}
-                </div>
-              ))}
-            </div>
-          </Card>
         </div>
       </section>
 
