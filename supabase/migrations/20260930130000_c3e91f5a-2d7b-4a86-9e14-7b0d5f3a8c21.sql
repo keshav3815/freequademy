@@ -333,10 +333,15 @@ CREATE POLICY "Teachers delete own resources" ON public.teacher_resources FOR DE
 USING (teacher_id = auth.uid());
 
 -- Private storage bucket; each teacher only touches their own folder. Guarded
--- so the migration also applies on a bare Postgres without Supabase Storage.
+-- so the migration also applies on a bare Postgres without Supabase Storage,
+-- including images that ship only a stub storage schema (no `public` column,
+-- no storage.foldername) until the Storage service migrates it.
 DO $$
 BEGIN
-  IF to_regclass('storage.buckets') IS NOT NULL AND to_regclass('storage.objects') IS NOT NULL THEN
+  IF to_regclass('storage.buckets') IS NOT NULL AND to_regclass('storage.objects') IS NOT NULL
+     AND EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_schema = 'storage' AND table_name = 'buckets' AND column_name = 'public')
+     AND to_regprocedure('storage.foldername(text)') IS NOT NULL THEN
     INSERT INTO storage.buckets (id, name, public, file_size_limit)
     VALUES ('teacher-resources', 'teacher-resources', false, 52428800)
     ON CONFLICT (id) DO NOTHING;

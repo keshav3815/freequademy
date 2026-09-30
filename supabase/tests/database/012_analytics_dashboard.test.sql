@@ -134,8 +134,12 @@ SELECT ok((SELECT lessons_completed FROM public.get_weekly_summary() WHERE perio
   'this week reflects the real lesson completions just recorded');
 
 -- ---- activity heatmap: only real activity sources are counted, unioned -------
+-- get_activity_days buckets by IST, so "today" must be the IST date too: UTC
+-- current_date is a day behind between 18:30 and 24:00 UTC.
 SELECT results_eq(
-  format('SELECT lesson_count, test_count, doubt_count FROM public.get_activity_days(current_date, current_date) WHERE activity_date = current_date'),
+  $$SELECT lesson_count, test_count, doubt_count
+      FROM public.get_activity_days((now() AT TIME ZONE 'Asia/Kolkata')::date, (now() AT TIME ZONE 'Asia/Kolkata')::date)
+     WHERE activity_date = (now() AT TIME ZONE 'Asia/Kolkata')::date$$,
   $$VALUES (5, 1, 1)$$,
   'today''s activity heatmap cell unions real lesson/test/doubt counts, nothing invented');
 

@@ -14,7 +14,10 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-IMAGE="${SUPABASE_PG_IMAGE:-public.ecr.aws/supabase/postgres:17.6.1.106}"
+# Pinned to the production Postgres version (Supabase project odawqbevdzpkwkxbggnf
+# reports 17.4.1.075). 17.6.1.106 segfaults on any "permission denied for
+# function" error, which 016_phase0_hardening exercises.
+IMAGE="${SUPABASE_PG_IMAGE:-public.ecr.aws/supabase/postgres:17.4.1.075}"
 NAME="freequademy_test_db_$$"
 PSQL=(docker exec -i "$NAME" psql -U postgres -h localhost -v ON_ERROR_STOP=1 -q -X)
 
