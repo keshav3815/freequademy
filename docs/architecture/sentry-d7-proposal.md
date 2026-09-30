@@ -1,6 +1,6 @@
 # D7 — Sentry monitoring proposal (NOT ENABLED)
 
-**Status:** prepared for decision. No Sentry package is installed, no DSN exists, nothing is sent anywhere.
+**Status:** D7 APPROVED 2026-10-01. Implemented in `src/lib/sentry.ts` (allow-list sanitizer, verified by `src/lib/sentry.test.ts`). **Not yet sending anything:** no `VITE_SENTRY_DSN` is configured in any environment.
 Freequademy's users are school students (Class 6–12, mostly minors), so the default is: **collect the error, never the child.**
 
 ## What would be collected
@@ -31,7 +31,7 @@ import * as Sentry from "@sentry/react";
 const REDACT = [
   /eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g, // JWTs
   /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi,                          // emails
-  /(?<!\d)(?:\+?91[-\s]?)?[6-9]\d{9}(?!\d)/g,                          // Indian mobile numbers
+  /(?<!\d)(?:\+?91[-\s]?)?[6-9]\d{4}[-\s]?\d{5}(?!\d)/g,              // Indian mobile numbers
 ];
 const scrub = (s?: string) => REDACT.reduce((t, re) => t?.replace(re, "[redacted]"), s);
 const stripUrl = (u?: string) => u?.split(/[?#]/)[0];

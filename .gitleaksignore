@@ -1,0 +1,4 @@
+# Anon (publishable) Supabase keys from 2025-09-08 — public by design, verified role=anon.
+# No service-role key has ever been committed. Anything else gitleaks finds must fail CI.
+d709d23fa59f49d585db97c603e20c10e8b08adc:.env:jwt:2
+8d2b4d689e2fd88326dea8181ec6c979a5adb8f8:src/integrations/supabase/client.ts:jwt:6

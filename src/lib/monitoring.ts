@@ -8,6 +8,8 @@
  * a Sentry tunnel or a Supabase Edge Function) — see docs/observability.md.
  */
 
+import { captureToSentry } from "./sentry";
+
 interface ErrorContext {
   componentStack?: string;
   [key: string]: unknown;
@@ -20,6 +22,7 @@ const MAX_REPORTS_PER_SESSION = 20;
 export function reportError(error: unknown, context: ErrorContext = {}) {
   const err = error instanceof Error ? error : new Error(String(error));
   console.error("[freequademy]", err, context);
+  captureToSentry(err, typeof context.source === "string" ? { source: context.source } : {});
 
   if (!endpoint || reportedThisSession >= MAX_REPORTS_PER_SESSION) return;
   reportedThisSession++;
