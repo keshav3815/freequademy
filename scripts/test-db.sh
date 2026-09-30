@@ -30,6 +30,20 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# Public ECR rate-limits anonymous pulls ("toomanyrequests"); retry, then fall
+# back to the identical image on Docker Hub.
+if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
+  for attempt in 1 2 3; do
+    docker pull -q "$IMAGE" >/dev/null 2>&1 && break
+    if [[ "$IMAGE" == public.ecr.aws/* ]] && docker pull -q "${IMAGE#public.ecr.aws/}" >/dev/null 2>&1; then
+      IMAGE="${IMAGE#public.ecr.aws/}"
+      break
+    fi
+    echo "Image pull failed (attempt $attempt), retrying…"
+    sleep $((attempt * 10))
+  done
+fi
+
 echo "Starting disposable database ($IMAGE)…"
 docker run -d --name "$NAME" -e POSTGRES_PASSWORD=postgres "$IMAGE" >/dev/null
 
