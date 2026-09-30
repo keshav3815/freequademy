@@ -2,3 +2,5 @@
 # No service-role key has ever been committed. Anything else gitleaks finds must fail CI.
 d709d23fa59f49d585db97c603e20c10e8b08adc:.env:jwt:2
 8d2b4d689e2fd88326dea8181ec6c979a5adb8f8:src/integrations/supabase/client.ts:jwt:6
+# Fake jwt.io example token used as a test fixture in the first version of src/lib/sentry.test.ts.
+f55139456602309b67f54a3b0e540c61de179495:src/lib/sentry.test.ts:jwt:5
