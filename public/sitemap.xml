@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Static routes only. Dynamic content (blog posts, subject/course pages,
+  lessons, forum threads, clubs) is NOT enumerated here: doing so would need
+  build-time or scheduled access to a live Supabase project's data, which
+  this repository does not have. Once a production project exists, generate
+  those entries from the database (e.g. a small Edge Function on a cron
+  schedule, or a build step that queries `blog_posts`/`subjects` where
+  status = 'published') rather than hand-maintaining this file — see
+  docs/remediation/phase-7-performance-a11y-seo.md.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://freequademy.com/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://freequademy.com/courses</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://freequademy.com/tests</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://freequademy.com/mentorship</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://freequademy.com/community</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://freequademy.com/blog</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+  <url><loc>https://freequademy.com/about</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://freequademy.com/help</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://freequademy.com/pricing</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://freequademy.com/privacy</loc><changefreq>monthly</changefreq><priority>0.2</priority></url>
+  <url><loc>https://freequademy.com/terms</loc><changefreq>monthly</changefreq><priority>0.2</priority></url>
+</urlset>

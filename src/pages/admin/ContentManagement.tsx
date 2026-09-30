@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, XCircle, Trash2 } from "lucide-react";
+import type { Tables } from "@/integrations/supabase/types";
 import {
   Table,
   TableBody,
@@ -14,13 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-interface ContentItem {
-  id: string;
-  content_snippet: string;
-  author_name: string;
-  date_submitted: string;
-  status: string;
-}
+type ContentItem = Tables<"dashboard_content">;
 
 const ContentManagement = () => {
   const [content, setContent] = useState<ContentItem[]>([]);
@@ -29,10 +24,13 @@ const ContentManagement = () => {
 
   const fetchContent = async () => {
     try {
+      // Capped rather than unbounded — see docs/remediation/phase-7-performance-a11y-seo.md
+      // for why a full "load more" pager was deferred here.
       const { data, error } = await supabase
         .from("dashboard_content")
         .select("*")
-        .order("date_submitted", { ascending: false });
+        .order("date_submitted", { ascending: false })
+        .limit(200);
 
       if (error) throw error;
       setContent(data || []);
@@ -154,7 +152,7 @@ const ContentManagement = () => {
                       </TableCell>
                       <TableCell>{item.author_name}</TableCell>
                       <TableCell>
-                        {new Date(item.date_submitted).toLocaleDateString()}
+                        {item.date_submitted && new Date(item.date_submitted).toLocaleDateString()}
                       </TableCell>
                       <TableCell>{getStatusBadge(item.status)}</TableCell>
                       <TableCell className="text-right">

@@ -149,7 +149,9 @@ const BlogAdmin = () => {
     setIsSubmitting(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      // Local session (no network round trip); RLS enforces access server-side.
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user ?? null;
       
       if (!user) {
         toast.error("You must be logged in as a mentor to create blog posts");
@@ -168,7 +170,8 @@ const BlogAdmin = () => {
         return;
       }
 
-      const slug = generateSlug(formData.title);
+      // Short random suffix keeps slugs unique when two posts share a title.
+      const slug = `${generateSlug(formData.title) || "post"}-${crypto.randomUUID().slice(0, 6)}`;
 
       const { error } = await supabase.from("blog_posts").insert([{
         title: formData.title.trim(),
@@ -360,6 +363,7 @@ const BlogAdmin = () => {
                       type="button"
                       variant="ghost"
                       size="icon"
+                      aria-label={`Remove tip ${index + 1}`}
                       onClick={() => removeArrayItem(quickTips, setQuickTips, index)}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -404,6 +408,7 @@ const BlogAdmin = () => {
                         type="button"
                         variant="ghost"
                         size="icon"
+                        aria-label={`Remove question ${qIndex + 1}`}
                         onClick={() => removeQuestion(qIndex)}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -466,6 +471,7 @@ const BlogAdmin = () => {
                       type="button"
                       variant="ghost"
                       size="icon"
+                      aria-label={`Remove summary point ${index + 1}`}
                       onClick={() => removeArrayItem(summaryPoints, setSummaryPoints, index)}
                     >
                       <Trash2 className="h-4 w-4" />

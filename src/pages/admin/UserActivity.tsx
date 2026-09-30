@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import type { Tables } from "@/integrations/supabase/types";
 import {
   Table,
   TableBody,
@@ -12,12 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-interface ActivityLog {
-  id: string;
-  user_name: string;
-  action: string;
-  timestamp: string;
-}
+type ActivityLog = Tables<"user_activity_log">;
 
 const UserActivity = () => {
   const [activities, setActivities] = useState<ActivityLog[]>([]);
@@ -110,7 +106,7 @@ const UserActivity = () => {
                       <TableCell className="font-medium">{activity.user_name}</TableCell>
                       <TableCell>{activity.action}</TableCell>
                       <TableCell>
-                        {new Date(activity.timestamp).toLocaleString()}
+                        {activity.timestamp && new Date(activity.timestamp).toLocaleString()}
                       </TableCell>
                     </TableRow>
                   ))}

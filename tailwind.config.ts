@@ -1,4 +1,6 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
+import tailwindcssTypography from "@tailwindcss/typography";
 
 export default {
 	darkMode: ["class"],
@@ -37,6 +39,23 @@ export default {
     				DEFAULT: 'hsl(var(--success))',
     				foreground: 'hsl(var(--success-foreground))'
     			},
+    			warning: {
+    				DEFAULT: 'hsl(var(--warning))',
+    				foreground: 'hsl(var(--warning-foreground))'
+    			},
+    			info: 'hsl(var(--info))',
+    			brand: {
+    				blue: 'hsl(var(--brand-blue))',
+    				indigo: 'hsl(var(--brand-indigo))',
+    				violet: 'hsl(var(--brand-violet))'
+    			},
+    			ink: {
+    				DEFAULT: 'hsl(var(--ink))',
+    				raised: 'hsl(var(--ink-raised))',
+    				border: 'hsl(var(--ink-border))',
+    				muted: 'hsl(var(--ink-muted))'
+    			},
+    			surface: 'hsl(var(--surface))',
     			destructive: {
     				DEFAULT: 'hsl(var(--destructive))',
     				foreground: 'hsl(var(--destructive-foreground))'
@@ -80,7 +99,8 @@ export default {
     			'gradient-secondary': 'var(--gradient-secondary)',
     			'gradient-hero': 'var(--gradient-hero)',
     			'gradient-card': 'var(--gradient-card)',
-    			'gradient-success': 'var(--gradient-success)'
+    			'gradient-success': 'var(--gradient-success)',
+    			'gradient-brand': 'var(--gradient-brand)'
     		},
     		boxShadow: {
     			sm: 'var(--shadow-sm)',
@@ -164,6 +184,13 @@ export default {
     			'scale-in': 'scale-in 0.2s ease-out'
     		},
     		fontFamily: {
+    			display: [
+    				'Plus Jakarta Sans',
+    				'Lato',
+    				'ui-sans-serif',
+    				'system-ui',
+    				'sans-serif'
+    			],
     			sans: [
     				'Lato',
     				'ui-sans-serif',
@@ -200,5 +227,5 @@ export default {
     		}
     	}
     },
-	plugins: [require("tailwindcss-animate")],
+	plugins: [tailwindcssAnimate, tailwindcssTypography],
 } satisfies Config;

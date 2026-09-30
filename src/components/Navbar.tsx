@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogOut, User, GraduationCap, BookOpen } from "lucide-react";
+import { Menu, X, LogOut, User, GraduationCap, BookOpen, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import freequademyLogo from "@/assets/freequademy-logo.png";
 import { useToast } from "@/components/ui/use-toast";
-import { User as SupabaseUser, Session } from "@supabase/supabase-js";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,50 +19,8 @@ export default function Navbar() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [userRole, setUserRole] = useState<'student' | 'mentor' | null>(null);
-
-  useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Fetch user role if logged in
-        if (session?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', session.user.id)
-            .single();
-          
-          setUserRole(profile?.role as 'student' | 'mentor' | null);
-        } else {
-          setUserRole(null);
-        }
-      }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-        
-        setUserRole(profile?.role as 'student' | 'mentor' | null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  const { user, isMentor, isAdmin, isModerator } = useAuth();
+  const userRole = isMentor ? 'mentor' : 'student';
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -87,7 +45,7 @@ export default function Navbar() {
   const isActive = (path: string) => location.pathname === path;
 
   const getDashboardPath = () => {
-    return userRole === 'mentor' ? '/teacher-dashboard' : '/dashboard';
+    return userRole === 'mentor' ? '/teacher' : '/dashboard';
   };
 
   return (
@@ -97,12 +55,10 @@ export default function Navbar() {
           <Link to="/" className="flex items-center gap-2 group">
             <img 
               src={freequademyLogo} 
-              alt="freequademy" 
-              className="h-10 md:h-12 w-10 md:w-12 rounded-full object-cover border-2 border-primary/20 shadow-sm"
+              alt="Freequademy logo" 
+              className="h-9 md:h-11 w-9 md:w-11 object-contain"
             />
-            <span className="text-lg md:text-xl font-bold text-gradient-primary">
-              freequademy
-            </span>
+            <span className="text-lg md:text-xl font-bold tracking-tight"><span className="text-foreground">Free</span><span className="text-gradient-primary">quademy</span></span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -191,6 +147,14 @@ export default function Navbar() {
                       {userRole === 'mentor' ? 'Teacher Dashboard' : 'Student Dashboard'}
                     </Link>
                   </DropdownMenuItem>
+                  {(isAdmin || isModerator) && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin" className="cursor-pointer">
+                        <Shield className="h-4 w-4 mr-2" />
+                        Admin Panel
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive">
                     <LogOut className="h-4 w-4 mr-2" />

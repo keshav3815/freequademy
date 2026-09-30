@@ -4,6 +4,8 @@ import AdminDashboard from "@/pages/admin/AdminDashboard";
 import ContentManagement from "@/pages/admin/ContentManagement";
 import UserActivity from "@/pages/admin/UserActivity";
 import ReportManagement from "@/pages/admin/ReportManagement";
+import MentorApplications from "@/pages/admin/MentorApplications";
+import Curriculum from "@/pages/admin/Curriculum";
 import { useUserRole } from "@/hooks/useUserRole";
 
 const AdminPanel = () => {
@@ -28,6 +30,8 @@ const AdminPanel = () => {
         <Route path="/content" element={<ContentManagement />} />
         <Route path="/activity" element={role === "admin" ? <UserActivity /> : <Navigate to="/admin" replace />} />
         <Route path="/reports" element={<ReportManagement />} />
+        <Route path="/curriculum" element={role === "admin" ? <Curriculum /> : <Navigate to="/admin" replace />} />
+        <Route path="/applications" element={role === "admin" ? <MentorApplications /> : <Navigate to="/admin" replace />} />
       </Routes>
     </DashboardLayout>
   );

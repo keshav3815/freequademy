@@ -1,0 +1,384 @@
+/*
+ * Landing page design system.
+ *
+ * Tokens are scoped to `.fq-landing` so the rest of the app keeps its current
+ * look. Tailwind's `bg-primary`, `text-muted-foreground`, etc. read these
+ * variables, so shadcn components rendered inside the landing page pick up the
+ * refined palette automatically.
+ */
+
+.fq-landing {
+  /* Surfaces */
+  --background: 230 40% 99%;
+  --surface: 230 45% 97%;
+  --card: 0 0% 100%;
+  --card-foreground: 232 38% 10%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 232 38% 10%;
+
+  /* Text */
+  --foreground: 232 38% 10%;
+  --muted: 230 30% 95%;
+  --muted-foreground: 229 14% 37%;
+
+  /* Brand */
+  --primary: 243 75% 58%;
+  --primary-foreground: 0 0% 100%;
+  --primary-glow: 243 80% 66%;
+  --accent: 243 90% 97%;
+  --accent-foreground: 243 62% 44%;
+  --secondary: 230 30% 95%;
+  --secondary-foreground: 232 38% 10%;
+
+  /* Lines */
+  --border: 230 22% 90%;
+  --input: 230 22% 86%;
+  --ring: 243 75% 58%;
+
+  /* Status */
+  --success: 158 64% 30%;
+  --success-foreground: 0 0% 100%;
+  --warning: 30 92% 38%;
+  --warning-foreground: 0 0% 100%;
+  --destructive: 0 72% 46%;
+  --destructive-foreground: 0 0% 100%;
+
+  /* Dark "ink" surfaces used for emphasis sections */
+  --ink: 232 45% 7%;
+  --ink-raised: 232 34% 12%;
+  --ink-border: 232 24% 21%;
+  --ink-muted: 230 22% 72%;
+
+  --radius: 1rem;
+
+  --shadow-card: 0 1px 2px hsl(232 38% 10% / 0.04), 0 8px 24px -12px hsl(232 38% 10% / 0.12);
+  --shadow-float: 0 2px 4px hsl(232 38% 10% / 0.04), 0 24px 48px -20px hsl(243 60% 30% / 0.28);
+
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  font-family: "Plus Jakarta Sans", "Lato", ui-sans-serif, system-ui, sans-serif;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  overflow-x: clip;
+}
+
+.fq-landing section[id] {
+  scroll-margin-top: 72px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:has(.fq-landing) {
+    scroll-behavior: smooth;
+  }
+}
+
+/* ---------- Layout ---------- */
+
+.fq-container {
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .fq-container {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .fq-container {
+    padding-inline: 2rem;
+  }
+}
+
+/* ---------- Typography ---------- */
+
+.fq-display {
+  font-size: clamp(2.6rem, 5.4vw + 0.8rem, 5.25rem);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+
+/* The hero headline stacks one verb per line at every width. */
+.fq-hero-title {
+  font-size: clamp(2.75rem, 3.4vw + 1.2rem, 4.6rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+
+.fq-hero-title > span {
+  display: block;
+}
+
+.fq-h2 {
+  font-size: clamp(2rem, 2.8vw + 1rem, 3.4rem);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.fq-h3 {
+  font-size: clamp(1.15rem, 0.4vw + 1rem, 1.35rem);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+
+.fq-lead {
+  font-size: clamp(1.05rem, 0.35vw + 0.95rem, 1.25rem);
+  line-height: 1.6;
+  color: hsl(var(--muted-foreground));
+  text-wrap: pretty;
+}
+
+.fq-eyebrow {
+  font-family: "Fira Code", ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: hsl(var(--accent-foreground));
+}
+
+.fq-caption {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: hsl(var(--muted-foreground));
+}
+
+.fq-text-brand {
+  background-image: var(--gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ---------- Surfaces ---------- */
+
+.fq-card {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 1.25rem;
+  box-shadow: var(--shadow-card);
+}
+
+.fq-float-card {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 1rem;
+  box-shadow: var(--shadow-float);
+}
+
+.fq-ink {
+  --foreground: 230 40% 97%;
+  --muted-foreground: var(--ink-muted);
+  --border: var(--ink-border);
+  --card: var(--ink-raised);
+  --card-foreground: 230 40% 97%;
+  --accent-foreground: 235 100% 82%;
+  --muted: var(--ink-raised);
+  background: hsl(var(--ink));
+  color: hsl(var(--foreground));
+}
+
+/* Faint technical grid, faded out toward the edges */
+.fq-grid-bg {
+  background-image:
+    linear-gradient(hsl(var(--foreground) / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--foreground) / 0.05) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 30%, transparent 75%);
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 30%, transparent 75%);
+}
+
+/* Single controlled brand glow, used sparingly */
+.fq-glow {
+  background:
+    radial-gradient(40% 50% at 30% 30%, hsl(var(--brand-blue) / 0.16), transparent 70%),
+    radial-gradient(40% 50% at 70% 60%, hsl(var(--brand-violet) / 0.14), transparent 70%);
+}
+
+/* ---------- Focus ---------- */
+
+.fq-landing a:focus-visible,
+.fq-landing button:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 3px;
+  border-radius: 0.5rem;
+}
+
+.fq-ink a:focus-visible,
+.fq-ink button:focus-visible {
+  outline-color: hsl(235 100% 82%);
+}
+
+/* ---------- Motion ---------- */
+
+.fq-reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.7s var(--ease-out),
+    transform 0.7s var(--ease-out);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.fq-reveal[data-visible="true"] {
+  opacity: 1;
+  transform: none;
+}
+
+.fq-hero-enter {
+  animation: fq-enter 0.8s var(--ease-out) both;
+  animation-delay: var(--enter-delay, 0ms);
+}
+
+@keyframes fq-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.fq-float {
+  animation: fq-float 7s ease-in-out infinite;
+  animation-delay: var(--float-delay, 0ms);
+}
+
+@keyframes fq-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.fq-pulse {
+  position: relative;
+}
+
+.fq-pulse::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 9999px;
+  border: 2px solid currentColor;
+  opacity: 0;
+  animation: fq-pulse 2.4s ease-out infinite;
+}
+
+@keyframes fq-pulse {
+  0% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+}
+
+.fq-caret::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -0.15em;
+  background: currentColor;
+  animation: fq-blink 1s steps(1) infinite;
+}
+
+@keyframes fq-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.fq-dash {
+  stroke-dasharray: 4 8;
+  animation: fq-dash 1.6s linear infinite;
+}
+
+@keyframes fq-dash {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+/* Same flow effect, sized for a 0–100 viewBox */
+.fq-dash-sm {
+  stroke-dasharray: 0.8 1.4;
+  animation: fq-dash-sm 1.4s linear infinite;
+}
+
+@keyframes fq-dash-sm {
+  to {
+    stroke-dashoffset: -4.4;
+  }
+}
+
+.fq-bar {
+  transform-origin: left;
+  transition: transform 1.1s var(--ease-out);
+  transition-delay: var(--bar-delay, 0ms);
+}
+
+/* Pause decorative loops while their section is off screen */
+[data-animate="false"] .fq-float,
+[data-animate="false"] .fq-pulse::after,
+[data-animate="false"] .fq-dash,
+[data-animate="false"] .fq-dash-sm {
+  animation-play-state: paused;
+}
+
+.fq-lift {
+  transition:
+    transform 0.35s var(--ease-out),
+    box-shadow 0.35s var(--ease-out),
+    border-color 0.35s var(--ease-out);
+}
+
+.fq-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-float);
+  border-color: hsl(var(--primary) / 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fq-reveal,
+  .fq-hero-enter {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    animation: none;
+  }
+
+  .fq-float,
+  .fq-pulse::after,
+  .fq-caret::after,
+  .fq-dash,
+  .fq-dash-sm {
+    animation: none;
+  }
+
+  .fq-bar,
+  .fq-lift {
+    transition: none;
+  }
+
+  .fq-lift:hover {
+    transform: none;
+  }
+}

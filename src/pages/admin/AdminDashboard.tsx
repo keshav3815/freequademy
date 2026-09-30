@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -118,25 +119,34 @@ const AdminDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer">
+            <Link
+              to="/admin/content"
+              className="block p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
               <h3 className="font-semibold mb-1">Review Content</h3>
               <p className="text-sm text-muted-foreground">
                 Check pending submissions from users
               </p>
-            </div>
-            <div className="p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer">
+            </Link>
+            <Link
+              to="/admin/reports"
+              className="block p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
               <h3 className="font-semibold mb-1">Handle Reports</h3>
               <p className="text-sm text-muted-foreground">
                 Review and action user reports
               </p>
-            </div>
+            </Link>
             {role === "admin" && (
-              <div className="p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer">
+              <Link
+                to="/admin/activity"
+                className="block p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
                 <h3 className="font-semibold mb-1">Monitor Activity</h3>
                 <p className="text-sm text-muted-foreground">
                   Track user actions in real-time
                 </p>
-              </div>
+              </Link>
             )}
           </div>
         </CardContent>

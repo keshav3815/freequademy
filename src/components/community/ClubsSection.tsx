@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { User } from "@supabase/supabase-js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Users, Plus, UserPlus } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 interface Club {
@@ -18,7 +19,7 @@ interface Club {
 
 const ClubsSection = () => {
   const [clubs, setClubs] = useState<Club[]>([]);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -28,30 +29,33 @@ const ClubsSection = () => {
   }, []);
 
   const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    // Local session (no network round trip); RLS enforces access server-side.
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user ?? null;
     setUser(user);
   };
 
   const fetchClubs = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    const { data, error } = await supabase
-      .from("student_clubs")
-      .select(`
-        *,
-        club_members!left(user_id)
-      `)
-      .order("member_count", { ascending: false });
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
 
-    if (error) {
-      console.error("Error fetching clubs:", error);
-    } else {
-      const clubsWithMembership = data?.map(club => ({
-        ...club,
-        is_member: club.club_members?.some((m: any) => m.user_id === user?.id) || false
-      })) || [];
-      setClubs(clubsWithMembership);
+    const [clubsResult, membershipResult] = await Promise.all([
+      supabase
+        .from("student_clubs")
+        .select("id, name, description, category, member_count")
+        .order("member_count", { ascending: false })
+        .limit(50),
+      userId
+        ? supabase.from("club_members").select("club_id").eq("user_id", userId)
+        : Promise.resolve({ data: [] as { club_id: string }[], error: null }),
+    ]);
+
+    if (clubsResult.error) {
+      console.error("Error fetching clubs:", clubsResult.error);
+      return;
     }
+    const memberOf = new Set((membershipResult.data || []).map((m) => m.club_id));
+    setClubs((clubsResult.data || []).map((club) => ({ ...club, is_member: memberOf.has(club.id) })) as Club[]);
   };
 
   const handleJoinClub = async (clubId: string, e: React.MouseEvent) => {
@@ -98,20 +102,21 @@ const ClubsSection = () => {
           </Card>
         ) : (
           clubs.map((club) => (
-            <Card
-              key={club.id}
-              className="hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => navigate(`/community/club/${club.id}`)}
-            >
-              <CardHeader>
-                <div className="flex justify-between items-start gap-2">
-                  <CardTitle className="text-lg">{club.name}</CardTitle>
-                  <Badge>{club.category}</Badge>
-                </div>
-                <CardDescription className="line-clamp-2">
-                  {club.description}
-                </CardDescription>
-              </CardHeader>
+            <Card key={club.id} className="hover:shadow-md transition-shadow overflow-hidden">
+              <Link
+                to={`/community/club/${club.id}`}
+                className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+              >
+                <CardHeader>
+                  <div className="flex justify-between items-start gap-2">
+                    <CardTitle className="text-lg">{club.name}</CardTitle>
+                    <Badge>{club.category}</Badge>
+                  </div>
+                  <CardDescription className="line-clamp-2">
+                    {club.description}
+                  </CardDescription>
+                </CardHeader>
+              </Link>
               <CardContent>
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">

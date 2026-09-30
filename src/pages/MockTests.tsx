@@ -1,239 +1,184 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { ClipboardCheck, Clock, Loader2, Trophy } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  FileText, 
-  Clock, 
-  Target, 
-  TrendingUp,
-  Award,
-  AlertCircle,
-  CheckCircle,
-  XCircle 
-} from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
-const mockTests = {
-  practice: [
-    { id: 1, title: "Mathematics - Chapter 1", questions: 30, time: 45, difficulty: "Easy", attempts: 2 },
-    { id: 2, title: "Science - Physics Basics", questions: 25, time: 30, difficulty: "Medium", attempts: 1 },
-    { id: 3, title: "English - Grammar", questions: 40, time: 40, difficulty: "Easy", attempts: 3 },
-  ],
-  chapter: [
-    { id: 4, title: "Quadratic Equations", questions: 50, time: 60, difficulty: "Hard", attempts: 0 },
-    { id: 5, title: "Chemical Reactions", questions: 45, time: 55, difficulty: "Medium", attempts: 1 },
-    { id: 6, title: "World History", questions: 35, time: 40, difficulty: "Medium", attempts: 0 },
-  ],
-  full: [
-    { id: 7, title: "Class 10 - Full Mathematics", questions: 100, time: 180, difficulty: "Hard", attempts: 0 },
-    { id: 8, title: "Class 10 - Full Science", questions: 90, time: 150, difficulty: "Hard", attempts: 0 },
-  ]
+const GRADES = ["6", "7", "8", "9", "10", "11", "12"];
+
+interface TestRow {
+  id: string;
+  title: string;
+  difficulty: string;
+  duration_minutes: number;
+  test_type: string;
+  subject: { id: string; name: string; class_level: number } | null;
+}
+
+interface AttemptRow {
+  id: string;
+  test_id: string;
+  percentage: number | null;
+  score: number | null;
+  max_score: number | null;
+  submitted_at: string | null;
+  test: { title: string } | null;
+}
+
+const difficultyVariant: Record<string, "secondary" | "outline" | "destructive"> = {
+  easy: "secondary",
+  medium: "outline",
+  hard: "destructive",
 };
 
-const sampleQuestions = [
-  {
-    id: 1,
-    question: "What is the value of x if 2x + 5 = 15?",
-    options: ["x = 5", "x = 10", "x = 7.5", "x = 20"],
-    correct: 0,
-    explanation: "Solving: 2x + 5 = 15, 2x = 10, x = 5"
-  },
-  {
-    id: 2,
-    question: "Which of the following is a prime number?",
-    options: ["21", "23", "25", "27"],
-    correct: 1,
-    explanation: "23 is only divisible by 1 and itself, making it prime"
-  },
-];
-
 export default function MockTests() {
-  const [activeTab, setActiveTab] = useState("practice");
-  const [showDemo, setShowDemo] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [showResult, setShowResult] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { user, profile, isMentor } = useAuth();
+  const defaultGrade = !isMentor && profile?.grade && GRADES.includes(profile.grade) ? profile.grade : "10";
+  const selectedClass = searchParams.get("class") ?? defaultGrade;
+  const [tests, setTests] = useState<TestRow[]>([]);
+  const [attempts, setAttempts] = useState<AttemptRow[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch(difficulty) {
-      case "Easy": return "text-success";
-      case "Medium": return "text-secondary";
-      case "Hard": return "text-destructive";
-      default: return "text-muted-foreground";
-    }
-  };
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    (async () => {
+      const { data: subjects } = await supabase.from("subjects").select("id").eq("class_level", Number(selectedClass));
+      const ids = (subjects ?? []).map((s) => s.id);
+      const { data } = ids.length
+        ? await supabase
+            .from("tests")
+            .select("id, title, difficulty, duration_minutes, test_type, subject:subjects(id, name, class_level)")
+            .eq("status", "published")
+            .in("subject_id", ids)
+            .order("created_at", { ascending: false })
+            .limit(100)
+        : { data: [] };
+      if (cancelled) return;
+      setTests((data ?? []) as TestRow[]);
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedClass]);
 
-  const handleAnswer = (optionIndex: number) => {
-    setSelectedAnswer(optionIndex);
-    setShowResult(true);
-  };
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("test_attempts")
+      .select("id, test_id, percentage, score, max_score, submitted_at, test:tests(title)")
+      .eq("status", "submitted")
+      .order("submitted_at", { ascending: false })
+      .limit(20)
+      .then(({ data }) => setAttempts((data ?? []) as AttemptRow[]));
+  }, [user]);
 
-  const nextQuestion = () => {
-    if (currentQuestion < sampleQuestions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
-      setSelectedAnswer(null);
-      setShowResult(false);
-    }
-  };
+  const bestByTest = useMemo(() => {
+    const best: Record<string, number> = {};
+    for (const a of attempts) best[a.test_id] = Math.max(best[a.test_id] ?? 0, Number(a.percentage ?? 0));
+    return best;
+  }, [attempts]);
+
+  useDocumentMeta({
+    title: `Class ${selectedClass} Practice Tests`,
+    description: `Free, instantly-scored practice tests for Class ${selectedClass}, with explanations for every question.`,
+  });
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
-      <section className="py-12">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-8 animate-slide-up">
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">
-              Mock <span className="bg-gradient-primary bg-clip-text text-transparent">Tests</span>
-            </h1>
-            <p className="text-muted-foreground text-lg">
-              Practice with timed tests and get instant feedback
-            </p>
+      <main className="container mx-auto px-4 py-12 space-y-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">Practice Tests</h1>
+            <p className="text-muted-foreground">Timed tests, scored instantly, with explanations for every answer.</p>
           </div>
+          <Select value={selectedClass} onValueChange={(value) => setSearchParams({ class: value })}>
+            <SelectTrigger className="w-[180px]" aria-label="Select class"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {GRADES.map((g) => <SelectItem key={g} value={g}>Class {g}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
 
-          {!showDemo ? (
-            <>
-              <div className="flex justify-center mb-8">
-                <Button variant="gradient" onClick={() => setShowDemo(true)}>
-                  <FileText className="h-4 w-4 mr-2" />
-                  Try Demo Test
-                </Button>
-              </div>
+        <Tabs defaultValue="available">
+          <TabsList>
+            <TabsTrigger value="available">Available tests</TabsTrigger>
+            {user && <TabsTrigger value="results">My results</TabsTrigger>}
+          </TabsList>
 
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="animate-fade-in">
-                <TabsList className="grid w-full md:w-[400px] mx-auto grid-cols-3">
-                  <TabsTrigger value="practice">Practice</TabsTrigger>
-                  <TabsTrigger value="chapter">Chapter-wise</TabsTrigger>
-                  <TabsTrigger value="full">Full Tests</TabsTrigger>
-                </TabsList>
-
-                {Object.entries(mockTests).map(([key, tests]) => (
-                  <TabsContent key={key} value={key} className="mt-8">
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {tests.map((test, index) => (
-                        <Card 
-                          key={test.id}
-                          className="p-6 hover:shadow-lg transition-all duration-300 hover:scale-105 animate-scale-in"
-                          style={{ animationDelay: `${index * 100}ms` }}
-                        >
-                          <div className="flex justify-between items-start mb-4">
-                            <h3 className="font-semibold text-lg">{test.title}</h3>
-                            <Badge className={getDifficultyColor(test.difficulty)}>
-                              {test.difficulty}
-                            </Badge>
-                          </div>
-
-                          <div className="space-y-3 mb-6">
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Target className="h-4 w-4" />
-                              <span>{test.questions} Questions</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Clock className="h-4 w-4" />
-                              <span>{test.time} Minutes</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <TrendingUp className="h-4 w-4" />
-                              <span>{test.attempts} Attempts</span>
-                            </div>
-                          </div>
-
-                          <Button variant={test.attempts > 0 ? "outline" : "gradient"} className="w-full">
-                            {test.attempts > 0 ? "Retake Test" : "Start Test"}
-                          </Button>
-                        </Card>
-                      ))}
-                    </div>
-                  </TabsContent>
-                ))}
-              </Tabs>
-            </>
-          ) : (
-            <Card className="max-w-3xl mx-auto p-8 animate-scale-in">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold">Demo Test</h2>
-                <Badge variant="secondary">
-                  Question {currentQuestion + 1}/{sampleQuestions.length}
-                </Badge>
-              </div>
-
-              <div className="mb-8">
-                <h3 className="text-lg font-medium mb-4">
-                  {sampleQuestions[currentQuestion].question}
-                </h3>
-
-                <div className="space-y-3">
-                  {sampleQuestions[currentQuestion].options.map((option, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleAnswer(index)}
-                      disabled={showResult}
-                      className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
-                        showResult
-                          ? index === sampleQuestions[currentQuestion].correct
-                            ? "border-success bg-success/10"
-                            : index === selectedAnswer
-                            ? "border-destructive bg-destructive/10"
-                            : "border-border"
-                          : "border-border hover:border-primary hover:bg-muted/50"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span>{option}</span>
-                        {showResult && (
-                          <>
-                            {index === sampleQuestions[currentQuestion].correct && (
-                              <CheckCircle className="h-5 w-5 text-success" />
-                            )}
-                            {index === selectedAnswer && index !== sampleQuestions[currentQuestion].correct && (
-                              <XCircle className="h-5 w-5 text-destructive" />
-                            )}
-                          </>
-                        )}
+          <TabsContent value="available" className="mt-6">
+            {loading ? (
+              <div className="flex justify-center py-16" role="status" aria-label="Loading tests"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+            ) : tests.length === 0 ? (
+              <Card><CardContent className="py-12 text-center text-muted-foreground">
+                No tests published for Class {selectedClass} yet. Mentors are adding new tests regularly.
+              </CardContent></Card>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {tests.map((test) => (
+                  <Card key={test.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <div className="flex items-start justify-between gap-2">
+                        <CardTitle className="text-lg">{test.title}</CardTitle>
+                        <Badge variant={difficultyVariant[test.difficulty] ?? "outline"} className="capitalize shrink-0">{test.difficulty}</Badge>
                       </div>
-                    </button>
+                      <CardDescription>{test.subject?.name} • {test.test_type} test</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <p className="text-sm text-muted-foreground flex items-center gap-1"><Clock className="h-4 w-4" /> {test.duration_minutes} minutes</p>
+                      {bestByTest[test.id] !== undefined && (
+                        <p className="text-sm flex items-center gap-1"><Trophy className="h-4 w-4 text-yellow-600" /> Best: {bestByTest[test.id]}%</p>
+                      )}
+                      <Button asChild className="w-full">
+                        <Link to={`/tests/${test.id}`}>
+                          <ClipboardCheck className="h-4 w-4 mr-2" />
+                          {bestByTest[test.id] !== undefined ? "Retake" : "Start test"}
+                        </Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {user && (
+            <TabsContent value="results" className="mt-6">
+              {attempts.length === 0 ? (
+                <p className="text-center text-muted-foreground py-12">You haven't completed any tests yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {attempts.map((a) => (
+                    <Card key={a.id}>
+                      <CardContent className="py-4 flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <p className="font-medium">{a.test?.title ?? "Test"}</p>
+                          <p className="text-xs text-muted-foreground">{a.submitted_at && new Date(a.submitted_at).toLocaleString()}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xl font-bold">{Number(a.percentage)}%</p>
+                          <p className="text-xs text-muted-foreground">{a.score}/{a.max_score} marks</p>
+                        </div>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
-
-                {showResult && (
-                  <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-                    <div className="flex items-start gap-2">
-                      <AlertCircle className="h-5 w-5 text-primary mt-0.5" />
-                      <div>
-                        <p className="font-medium">Explanation:</p>
-                        <p className="text-sm text-muted-foreground">
-                          {sampleQuestions[currentQuestion].explanation}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setShowDemo(false)}>
-                  Exit Test
-                </Button>
-                {showResult && currentQuestion < sampleQuestions.length - 1 && (
-                  <Button variant="gradient" onClick={nextQuestion}>
-                    Next Question
-                  </Button>
-                )}
-                {showResult && currentQuestion === sampleQuestions.length - 1 && (
-                  <Button variant="success" onClick={() => setShowDemo(false)}>
-                    <Award className="h-4 w-4 mr-2" />
-                    Complete Test
-                  </Button>
-                )}
-              </div>
-            </Card>
+              )}
+            </TabsContent>
           )}
-        </div>
-      </section>
-
+        </Tabs>
+      </main>
       <Footer />
     </div>
   );

@@ -1,0 +1,70 @@
+-- Shared helpers for the pgTAP RLS suite.
+-- Included by every test file with `\ir ../helpers.psql`. Everything here is
+-- created inside the test transaction and disappears on ROLLBACK.
+--
+-- Persona switching mirrors how PostgREST executes a request: it switches to
+-- the `anon` or `authenticated` role and exposes the JWT subject through
+-- request.jwt.claim.sub (older auth.uid()) and request.jwt.claims (newer).
+
+CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
+SET search_path = public, extensions;
+
+CREATE SCHEMA IF NOT EXISTS tests;
+GRANT USAGE ON SCHEMA tests TO anon, authenticated;
+
+-- Creates an auth user the same way Supabase Auth does (fires handle_new_user).
+CREATE OR REPLACE FUNCTION tests.create_user(_email text, _meta jsonb DEFAULT '{}'::jsonb)
+RETURNS uuid
+LANGUAGE sql
+AS $$
+  INSERT INTO auth.users (id, email, raw_user_meta_data)
+  VALUES (gen_random_uuid(), _email, _meta)
+  RETURNING id
+$$;
+
+-- Grants the platform admin role (setup only; runs as postgres).
+CREATE OR REPLACE FUNCTION tests.make_admin(_user_id uuid)
+RETURNS void
+LANGUAGE sql
+AS $$
+  INSERT INTO public.user_roles (user_id, role) VALUES (_user_id, 'admin');
+$$;
+
+-- Makes an approved, verified mentor directly (setup only; runs as postgres).
+CREATE OR REPLACE FUNCTION tests.make_mentor(_user_id uuid)
+RETURNS void
+LANGUAGE sql
+AS $$
+  UPDATE public.profiles SET role = 'mentor' WHERE id = _user_id;
+  INSERT INTO public.mentors (id, full_name, email, is_verified)
+  SELECT id, COALESCE(full_name, 'Mentor'), email, true FROM public.profiles WHERE id = _user_id;
+$$;
+
+-- Switch to an authenticated persona. Call `RESET ROLE` before switching back
+-- to anon or postgres.
+CREATE OR REPLACE FUNCTION tests.authenticate_as(_user_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  PERFORM set_config('request.jwt.claim.sub', _user_id::text, true);
+  PERFORM set_config('request.jwt.claim.role', 'authenticated', true);
+  PERFORM set_config('request.jwt.claims',
+    json_build_object('sub', _user_id, 'role', 'authenticated')::text, true);
+  PERFORM set_config('role', 'authenticated', true);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION tests.become_anon()
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  PERFORM set_config('request.jwt.claim.sub', '', true);
+  PERFORM set_config('request.jwt.claim.role', 'anon', true);
+  PERFORM set_config('request.jwt.claims', '{"role":"anon"}', true);
+  PERFORM set_config('role', 'anon', true);
+END;
+$$;
+
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA tests TO anon, authenticated;

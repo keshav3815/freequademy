@@ -54,7 +54,9 @@ const BlogEdit = () => {
 
   const fetchPost = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      // Local session (no network round trip); RLS enforces access server-side.
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user ?? null;
       if (!user) {
         toast.error("You must be logged in");
         navigate("/login");
@@ -64,13 +66,13 @@ const BlogEdit = () => {
       const { data, error } = await supabase
         .from("blog_posts")
         .select("*")
-        .eq("id", id)
+        .eq("id", id ?? "")
         .eq("author_id", user.id)
         .single();
 
       if (error || !data) {
         toast.error("Post not found or you don't have permission to edit it");
-        navigate("/teacher-dashboard");
+        navigate("/teacher/blog");
         return;
       }
 
@@ -100,12 +102,7 @@ const BlogEdit = () => {
     }
   };
 
-  const generateSlug = (title: string) => {
-    return title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
-  };
+  // The slug is fixed at creation so existing links keep working after edits.
 
   const handleInputChange = (field: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -204,13 +201,11 @@ const BlogEdit = () => {
     setIsSubmitting(true);
 
     try {
-      const slug = generateSlug(formData.title);
 
       const { error } = await supabase
         .from("blog_posts")
         .update({
           title: formData.title.trim(),
-          slug,
           subject: formData.subject,
           class_level: formData.classLevel,
           chapter: formData.chapter.trim(),
@@ -225,7 +220,7 @@ const BlogEdit = () => {
           read_time_minutes: formData.readTimeMinutes,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", id);
+        .eq("id", id ?? "");
 
       if (error) {
         console.error("Error updating blog post:", error);
@@ -234,7 +229,7 @@ const BlogEdit = () => {
       }
 
       toast.success(status === "published" ? "Blog post published!" : "Draft saved!");
-      navigate("/teacher-dashboard");
+      navigate("/teacher/blog");
     } catch (error) {
       console.error("Error:", error);
       toast.error("An error occurred");
@@ -260,10 +255,10 @@ const BlogEdit = () => {
       <Navbar />
       
       <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <Link to="/teacher-dashboard">
+        <Link to="/teacher/blog">
           <Button variant="ghost" className="mb-6">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
+            Back to my posts
           </Button>
         </Link>
 
@@ -410,6 +405,7 @@ const BlogEdit = () => {
                       type="button"
                       variant="ghost"
                       size="icon"
+                      aria-label={`Remove tip ${index + 1}`}
                       onClick={() => removeArrayItem(quickTips, setQuickTips, index)}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -454,6 +450,7 @@ const BlogEdit = () => {
                         type="button"
                         variant="ghost"
                         size="icon"
+                        aria-label={`Remove question ${qIndex + 1}`}
                         onClick={() => removeQuestion(qIndex)}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -516,6 +513,7 @@ const BlogEdit = () => {
                       type="button"
                       variant="ghost"
                       size="icon"
+                      aria-label={`Remove summary point ${index + 1}`}
                       onClick={() => removeArrayItem(summaryPoints, setSummaryPoints, index)}
                     >
                       <Trash2 className="h-4 w-4" />

@@ -5,15 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, CheckCircle, AlertCircle, Trash2 } from "lucide-react";
+import type { Tables } from "@/integrations/supabase/types";
 
-interface Report {
-  id: string;
-  reporter_name: string;
-  reason: string;
-  content_link: string | null;
-  status: string;
-  created_at: string;
-}
+type Report = Tables<"user_reports">;
 
 const ReportManagement = () => {
   const [reports, setReports] = useState<Report[]>([]);
@@ -25,7 +19,8 @@ const ReportManagement = () => {
       const { data, error } = await supabase
         .from("user_reports")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(200);
 
       if (error) throw error;
       setReports(data || []);
@@ -114,7 +109,7 @@ const ReportManagement = () => {
                       Report from {report.reporter_name}
                     </CardTitle>
                     <CardDescription>
-                      Submitted on {new Date(report.created_at).toLocaleDateString()}
+                      {report.created_at && `Submitted on ${new Date(report.created_at).toLocaleDateString()}`}
                     </CardDescription>
                   </div>
                   {getStatusBadge(report.status)}

@@ -35,7 +35,8 @@ interface Session {
   scheduled_at: string;
   duration_minutes: number;
   status: string;
-  participants: any[];
+  max_participants: number | null;
+  participants: { id: string; student_id: string; status: string }[];
 }
 
 interface Feedback {
@@ -46,9 +47,9 @@ interface Feedback {
   session: {
     title: string;
   };
-  student: {
-    full_name: string;
-  };
+  student_id: string;
+  is_anonymous: boolean | null;
+  studentName?: string;
 }
 
 export default function MentorDashboard() {
@@ -72,7 +73,9 @@ export default function MentorDashboard() {
     scheduled_at: "",
     duration_minutes: "60",
     max_participants: "1",
+    meeting_link: "",
   });
+  const [names, setNames] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetchDashboardData();
@@ -80,7 +83,9 @@ export default function MentorDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      // Local session (no network round trip); RLS enforces access server-side.
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user ?? null;
       if (!user) return;
 
       // Fetch mentor profile
@@ -94,8 +99,8 @@ export default function MentorDashboard() {
       const { data: sessionsData } = await supabase
         .from('mentorship_sessions')
         .select(`
-          *,
-          participants:session_participants(*)
+          id, title, description, session_type, scheduled_at, duration_minutes, status, max_participants, mentor_id,
+          participants:session_participants(id, student_id, status)
         `)
         .eq('mentor_id', user.id)
         .order('scheduled_at', { ascending: false });
@@ -106,31 +111,47 @@ export default function MentorDashboard() {
         // Calculate stats
         const completed = sessionsData.filter(s => s.status === 'completed').length;
         const upcoming = sessionsData.filter(s => s.status === 'scheduled').length;
+        const studentIds = new Set(
+          sessionsData.flatMap(s => (s.participants || []).filter(p => p.status !== 'cancelled').map(p => p.student_id))
+        );
         
         setStats({
           totalSessions: sessionsData.length,
           completedSessions: completed,
           upcomingSessions: upcoming,
-          averageRating: mentorProfile?.rating || 0,
-          totalStudents: mentorProfile?.total_sessions || 0,
+          averageRating: Number(mentorProfile?.rating || 0),
+          totalStudents: studentIds.size,
         });
+
+        if (studentIds.size > 0) {
+          const { data: people } = await supabase
+            .from('public_profiles')
+            .select('id, full_name')
+            .in('id', [...studentIds]);
+          setNames(Object.fromEntries((people || []).map(p => [p.id, p.full_name || 'Student'])));
+        }
       }
 
       // Fetch feedbacks
-      const { data: feedbackData } = await supabase
+      const { data: feedbackData, error: feedbackError } = await supabase
         .from('mentorship_feedback')
         .select(`
-          *,
-          session:mentorship_sessions(title),
-          student:profiles(full_name)
+          id, rating, feedback_text, created_at, student_id, is_anonymous,
+          session:mentorship_sessions(title)
         `)
         .eq('mentor_id', user.id)
         .order('created_at', { ascending: false })
         .limit(5);
 
-      if (feedbackData) {
-        setFeedbacks(feedbackData as any);
+      if (feedbackError) throw feedbackError;
+      const feedbackRows = (feedbackData || []) as Feedback[];
+      const reviewerIds = feedbackRows.filter(f => !f.is_anonymous).map(f => f.student_id);
+      if (reviewerIds.length > 0) {
+        const { data: reviewers } = await supabase.from('public_profiles').select('id, full_name').in('id', reviewerIds);
+        const reviewerNames = new Map((reviewers || []).map(r => [r.id, r.full_name]));
+        feedbackRows.forEach(f => { f.studentName = f.is_anonymous ? undefined : reviewerNames.get(f.student_id) || undefined; });
       }
+      setFeedbacks(feedbackRows);
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -146,8 +167,20 @@ export default function MentorDashboard() {
 
   const handleCreateSession = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      // Local session (no network round trip); RLS enforces access server-side.
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user ?? null;
       if (!user) return;
+
+      const meetingLink = newSession.meeting_link.trim();
+      if (!newSession.title.trim() || !newSession.scheduled_at) {
+        toast({ title: "Missing details", description: "Add a title and a date & time.", variant: "destructive" });
+        return;
+      }
+      if (meetingLink && !/^https:\/\/\S+$/i.test(meetingLink)) {
+        toast({ title: "Invalid meeting link", description: "Use an https:// link (Google Meet, Zoom, Jitsi…).", variant: "destructive" });
+        return;
+      }
 
       const { error } = await supabase
         .from('mentorship_sessions')
@@ -156,9 +189,10 @@ export default function MentorDashboard() {
           title: newSession.title,
           description: newSession.description,
           session_type: newSession.session_type as 'one-on-one' | 'group',
-          scheduled_at: newSession.scheduled_at,
+          scheduled_at: new Date(newSession.scheduled_at).toISOString(),
+          meeting_link: meetingLink || null,
           duration_minutes: parseInt(newSession.duration_minutes),
-          max_participants: parseInt(newSession.max_participants),
+          max_participants: newSession.session_type === 'one-on-one' ? 1 : Math.max(1, parseInt(newSession.max_participants) || 1),
           status: 'scheduled'
         });
 
@@ -204,6 +238,19 @@ export default function MentorDashboard() {
         variant: "destructive",
       });
     }
+  };
+
+  const markAttendance = async (sessionId: string, studentId: string, status: 'attended' | 'absent') => {
+    const { error } = await supabase.rpc('set_participant_attendance', {
+      _session_id: sessionId,
+      _student_id: studentId,
+      _status: status,
+    });
+    if (error) {
+      toast({ title: "Could not record attendance", description: error.message, variant: "destructive" });
+      return;
+    }
+    fetchDashboardData();
   };
 
   const upcomingSessions = sessions.filter(s => s.status === 'scheduled');
@@ -346,6 +393,17 @@ export default function MentorDashboard() {
                         onChange={(e) => setNewSession({...newSession, duration_minutes: e.target.value})}
                       />
                     </div>
+                    <div>
+                      <Label htmlFor="meeting_link">Meeting link (https)</Label>
+                      <Input
+                        id="meeting_link"
+                        type="url"
+                        placeholder="https://meet.google.com/..."
+                        value={newSession.meeting_link}
+                        onChange={(e) => setNewSession({...newSession, meeting_link: e.target.value})}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">Only you and registered students can see this link.</p>
+                    </div>
                     {newSession.session_type === 'group' && (
                       <div>
                         <Label htmlFor="max_participants">Max Participants</Label>
@@ -400,6 +458,21 @@ export default function MentorDashboard() {
                               Mark Complete
                             </Button>
                           </div>
+                          {(session.participants || []).filter(p => p.status !== 'cancelled').length > 0 && (
+                            <div className="mt-4 space-y-2">
+                              <p className="text-sm font-medium">Attendance</p>
+                              {(session.participants || []).filter(p => p.status !== 'cancelled').map((p) => (
+                                <div key={p.id} className="flex items-center justify-between gap-2 text-sm">
+                                  <span>{names[p.student_id] || 'Student'}</span>
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant="outline" className="capitalize">{p.status}</Badge>
+                                    <Button size="sm" variant="ghost" onClick={() => markAttendance(session.id, p.student_id, 'attended')}>Present</Button>
+                                    <Button size="sm" variant="ghost" onClick={() => markAttendance(session.id, p.student_id, 'absent')}>Absent</Button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </CardContent>
                       </Card>
                     ))}
@@ -434,7 +507,7 @@ export default function MentorDashboard() {
                           </div>
                           <div className="flex items-center">
                             <Users className="mr-1 h-4 w-4" />
-                            {session.participants?.length || 0} registered
+                            {(session.participants || []).filter(p => p.status !== 'cancelled').length} / {session.max_participants} registered
                           </div>
                         </div>
                       </CardContent>
@@ -498,7 +571,7 @@ export default function MentorDashboard() {
                         <div>
                           <p className="font-medium">{feedback.session?.title}</p>
                           <p className="text-sm text-muted-foreground">
-                            by {feedback.student?.full_name || 'Anonymous'}
+                            by {feedback.studentName || 'Anonymous'}
                           </p>
                         </div>
                         <div className="flex">

@@ -6,6 +6,8 @@ import {
   FileText, 
   Activity, 
   AlertTriangle, 
+  UserCheck,
+  BookOpen,
   Menu, 
   X, 
   LogOut 
@@ -51,6 +53,18 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       roles: ["admin"],
     },
     {
+      name: "Curriculum",
+      path: "/admin/curriculum",
+      icon: BookOpen,
+      roles: ["admin"],
+    },
+    {
+      name: "Mentor Applications",
+      path: "/admin/applications",
+      icon: UserCheck,
+      roles: ["admin"],
+    },
+    {
       name: "Report Management",
       path: "/admin/reports",
       icon: AlertTriangle,
@@ -90,6 +104,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <Button
           variant="ghost"
           size="icon"
+          aria-label={sidebarOpen ? "Close menu" : "Open menu"}
+          aria-expanded={sidebarOpen}
           onClick={() => setSidebarOpen(!sidebarOpen)}
         >
           {sidebarOpen ? <X /> : <Menu />}

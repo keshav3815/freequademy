@@ -1,10 +1,7 @@
 project_id = "odawqbevdzpkwkxbggnf"
 
-[functions.create-razorpay-order]
-verify_jwt = false
-
-[functions.verify-payment]
-verify_jwt = false
-
+# doubt-solver verifies the caller's JWT itself (auth.getClaims) and rejects
+# anonymous requests, so gateway-level verification stays disabled to keep
+# compatibility with Supabase's asymmetric signing keys.
 [functions.doubt-solver]
 verify_jwt = false

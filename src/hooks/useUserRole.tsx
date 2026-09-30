@@ -1,47 +1,15 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 type UserRole = "admin" | "moderator" | null;
 
+/**
+ * Admin/moderator role for the admin panel. Thin wrapper over AuthContext so
+ * roles are fetched once per session and update on sign-in/sign-out. A user
+ * holding both roles resolves to "admin".
+ */
 export const useUserRole = () => {
-  const [role, setRole] = useState<UserRole>(null);
-  const [loading, setLoading] = useState(true);
+  const { loading, isAdmin, isModerator } = useAuth();
+  const role: UserRole = isAdmin ? "admin" : isModerator ? "moderator" : null;
 
-  useEffect(() => {
-    const fetchUserRole = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          setRole(null);
-          setLoading(false);
-          return;
-        }
-
-        const { data: roleData, error } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        if (error) {
-          console.error("Error fetching role:", error);
-          setRole(null);
-        } else if (roleData) {
-          setRole(roleData.role as UserRole);
-        } else {
-          setRole(null);
-        }
-      } catch (error) {
-        console.error("Error in fetchUserRole:", error);
-        setRole(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserRole();
-  }, []);
-
-  return { role, loading, isAdmin: role === "admin", isModerator: role === "moderator" };
+  return { role, loading, isAdmin, isModerator };
 };
