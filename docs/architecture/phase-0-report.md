@@ -45,6 +45,25 @@
 | Current state | **UNKNOWN — cannot be verified from this machine** (listing GitHub App installations needs a GitHub-App user token; Lovable and Supabase OAuth-app settings are dashboard-only) |
 | Risk | Opening the Lovable project and making any edit would very likely redeploy `verify-payment` (still present in `main` and in Lovable's copy) |
 
+### Phase A re-verification — 2026-10-01 (read-only)
+
+| Control | Status | Direct evidence available to me | Remaining risk |
+|---|---|---|---|
+| 1. Lovable → GitHub connection disconnected | **UNKNOWN** | None: Lovable settings are only visible in Lovable's dashboard | Lovable edit could still push to `main` |
+| 2. Lovable → Supabase connection disconnected | **UNKNOWN** | None: no Supabase CLI/API endpoint lists third-party integrations | Lovable session could redeploy all Edge Functions, including `verify-payment` |
+| 3. Lovable GitHub App removed | **UNKNOWN** | `GET /user/installations` → 403 (needs a GitHub-App token; this `gh` token has `repo, workflow, read:org, gist`). Supporting only, not proof: repo has 0 webhooks, 0 deploy keys, 1 collaborator (`keshav3815`, admin), no `gpt-engineer-app` events in the repo event feed | Same as 1 |
+| 4. Lovable Supabase OAuth authorization revoked | **UNKNOWN** | None: authorized OAuth apps are dashboard-only | Same as 2 |
+
+**Lovable security gate: NOT CLOSED.** Phases B–J not started.
+
+**Evidence to provide** (screenshot or pasted page text, one per control):
+1. Lovable → project → Settings → GitHub, showing no connected repository.
+2. Lovable → project → Supabase integration, showing disconnected.
+3. `https://github.com/settings/installations`, showing Lovable absent (or its "Repository access" not including `freequademy`).
+4. `https://supabase.com/dashboard/org/ssdqiladadldfnyrxxxo/apps` (Organization → OAuth Apps / Authorized apps), showing Lovable absent.
+
+After that I re-check Edge Functions (expect `doubt-solver` only; both payment functions 404) and GitHub/Vercel deployment sources, then continue with Phase B.
+
 **What you need to do** (only you have access): (1) Lovable → project → Settings → GitHub: disconnect; (2) Lovable → Supabase integration: disconnect; (3) GitHub → Settings → Applications → Installed GitHub Apps → Lovable: uninstall or remove this repo; (4) Supabase → Organization → OAuth Apps / Integrations: revoke Lovable. Until then, **do not open the project in Lovable.** I will re-verify `functions list` afterwards.
 
 ## 4. Phase 0 gate
