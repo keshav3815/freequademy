@@ -74,7 +74,7 @@ https://odawqbevdzpkwkxbggnf.supabase.co   ← vendor domain, region UNKNOWN
 | Lint | Pass, 0 errors, 13 warnings |
 | Unit (Vitest) | 70/70 in 12 files |
 | Build | Pass |
-| pgTAP | 313/314 (corrected 2026-10-01; first published as 331/332 from a miscount). **1 flaky test:** `012_analytics_dashboard` #25 compares an IST-bucketed day against UTC `current_date`; fails daily 18:30–24:00 UTC. Test bug, not product bug. |
+| pgTAP | 313/314. **1 flaky test:** `012_analytics_dashboard` #25 compares an IST-bucketed day against UTC `current_date`; fails daily 18:30–24:00 UTC. Test bug, not product bug. |
 | E2E (Playwright) | Not run in this audit |
 
 ---

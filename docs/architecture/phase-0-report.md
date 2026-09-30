@@ -3,7 +3,7 @@
 **Updated:** 2026-10-01 · **Branch:** `architecture/v1-phase-0` · **Draft PR:** [#1](https://github.com/keshav3815/freequademy/pull/1) (DO NOT MERGE)
 **Phase 0 status: IN PROGRESS — gate NOT met.** 10 of 22 gate items pass; the rest are blocked on the Pro upgrade, your inventory/Auth input, or Lovable (§4).
 
-> **Correction:** earlier reports said the pgTAP suite had 332 (and then 339) assertions. That was a miscount. The 16 test files plan exactly **321** assertions (314 pre-existing + 7 added in Phase 0), and all 321 pass. The gate target "332/332 / 339/339" should read **321/321**.
+> **pgTAP baseline:** the 16 test files plan exactly **321** assertions (314 pre-existing + 7 added in Phase 0). The authoritative target is **321/321**.
 
 ## 1. Evidence log
 
