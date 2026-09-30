@@ -74,7 +74,7 @@ https://odawqbevdzpkwkxbggnf.supabase.co   ← vendor domain, region UNKNOWN
 | Lint | Pass, 0 errors, 13 warnings |
 | Unit (Vitest) | 70/70 in 12 files |
 | Build | Pass |
-| pgTAP | 331/332. **1 flaky test:** `012_analytics_dashboard` #25 compares an IST-bucketed day against UTC `current_date`; fails daily 18:30–24:00 UTC. Test bug, not product bug. |
+| pgTAP | 313/314 (corrected 2026-10-01; first published as 331/332 from a miscount). **1 flaky test:** `012_analytics_dashboard` #25 compares an IST-bucketed day against UTC `current_date`; fails daily 18:30–24:00 UTC. Test bug, not product bug. |
 | E2E (Playwright) | Not run in this audit |
 
 ---
@@ -223,7 +223,7 @@ Each phase: CURRENT → GAP → TARGET → IMPLEMENTATION → VALIDATION → GAT
 ### Phase 0 — Protect and establish ground truth
 - **Current:** fake-payment endpoint live; work uncommitted; production state unknown; no staging, backups unknown, 4 anon-callable definer functions, flaky test.
 - **Implementation:** (1) delete `verify-payment` and `create-razorpay-order` from production — *needs your approval + Supabase access*; (2) commit working tree on branch `architecture/v1-phase-0`, open PR; (3) read-only production inventory (region, plan, backups, migration history, functions, Auth settings, `phase0_mentor_review.sql`) — *you run it or grant access*; (4) create staging project in Mumbai; (5) migration: revoke anon `EXECUTE` on the 4 unguarded definer functions + pgTAP; (6) fix flaky pgTAP #25; (7) Sentry (web + functions) with PII scrubbing; (8) Vercel env per environment, remove `.env` from git; (9) custom SMTP; (10) Pro plan + first restore drill into staging.
-- **Validation:** `OPTIONS` on both payment functions → 404; CI green including pgTAP 332/332; restore drill timed and row-counted; a test error appears in Sentry.
+- **Validation:** `OPTIONS` on both payment functions → 404; CI green including pgTAP 321/321; restore drill timed and row-counted; a test error appears in Sentry.
 - **Gate:** no P0 open; production state documented; one successful restore.
 
 ### Phase 1 — Own API domain + Mumbai
