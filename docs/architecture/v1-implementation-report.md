@@ -55,7 +55,7 @@
 | Build | pass |
 | Restore drill (local data) | passed |
 | k6 (local) | 0 failures / 36,902 |
-| E2E (Playwright) | runs in CI on push — see PR #1 checks |
+| E2E (Playwright) | **20/20** in CI run 36828529854 (commit 4841e38); all 7 CI jobs green |
 
 ## Final audit
 
@@ -81,7 +81,7 @@
 | Recovery | PARTIAL | Drill 6 s locally; runbook | No production RTO evidence | Run drill on first prod backup |
 | CI/CD | PARTIAL | CI: lint, types, unit, pgTAP, E2E, gitleaks, deno, gateway; Deploy workflow with approval | No staging to deploy to | Staging slot |
 | Migrations | PARTIAL | From-scratch validation in CI; dry-run before push | Prod history unknown | Reconcile; never `db push` to prod before that |
-| Tests | PASS | Numbers above | CI E2E pending on this push | Watch PR #1 |
+| Tests | PASS | Numbers above; CI run 36828529854 green (pgTAP 387/387, Vitest 124/124, E2E 20/20, gitleaks clean, deno + gateway checks) | — | — |
 | Mobile / API readiness | PARTIAL | Versioned `/v1` with contract | Not deployed | Deploy |
 
 ## Owner actions that unblock everything (all free)
