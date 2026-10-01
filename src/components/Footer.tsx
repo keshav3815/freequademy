@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
-import { Mail, Phone, MapPin } from "lucide-react";
-import { FaFacebookF, FaInstagram, FaYoutube, FaLinkedinIn } from "react-icons/fa";
-import { FaXTwitter } from "react-icons/fa6";
+import { Mail } from "lucide-react";
+import { FaInstagram } from "react-icons/fa";
 import freequademyLogo from "@/assets/freequademy-logo.png";
 
 export default function Footer() {
@@ -14,31 +13,25 @@ export default function Footer() {
             <Link to="/" className="inline-flex items-center gap-2 mb-4 group">
               <img 
                 src={freequademyLogo} 
-                alt="freequademy" 
-                className="h-10 w-10 rounded-full object-cover border-2 border-primary/20 shadow-sm group-hover:shadow-glow-sm transition-all"
+                alt="Freequademy logo" 
+                className="h-10 w-10 object-contain transition-transform group-hover:scale-105"
               />
-              <span className="text-xl font-bold text-gradient-primary">
-                freequademy
-              </span>
+              <span className="text-xl font-bold tracking-tight"><span className="text-foreground">Free</span><span className="text-gradient-primary">quademy</span></span>
             </Link>
             <p className="text-sm text-muted-foreground mb-6 leading-relaxed max-w-xs">
               Empowering students with gamified learning experiences for Classes 6-12
             </p>
             <div className="flex gap-3">
-              <a href="#" className="p-2 rounded-lg bg-[#1877F2] hover:bg-[#1877F2]/80 text-white transition-all">
-                <FaFacebookF className="h-5 w-5" />
-              </a>
-              <a href="#" className="p-2 rounded-lg bg-black hover:bg-black/80 text-white transition-all">
-                <FaXTwitter className="h-5 w-5" />
-              </a>
-              <a href="https://www.instagram.com/freequademy/" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-gradient-to-br from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] hover:opacity-80 text-white transition-all">
+              {/* Only real, live accounts are linked here — a dead href="#"
+                  row of social icons implies a presence that doesn't exist. */}
+              <a
+                href="https://www.instagram.com/freequademy/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Freequademy on Instagram"
+                className="p-2 rounded-lg bg-gradient-to-br from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] hover:opacity-80 text-white transition-all"
+              >
                 <FaInstagram className="h-5 w-5" />
-              </a>
-              <a href="#" className="p-2 rounded-lg bg-[#FF0000] hover:bg-[#FF0000]/80 text-white transition-all">
-                <FaYoutube className="h-5 w-5" />
-              </a>
-              <a href="#" className="p-2 rounded-lg bg-[#0A66C2] hover:bg-[#0A66C2]/80 text-white transition-all">
-                <FaLinkedinIn className="h-5 w-5" />
               </a>
             </div>
           </div>
@@ -109,24 +102,20 @@ export default function Footer() {
           <div>
             <h3 className="font-bold text-foreground mb-4 md:mb-6">Contact Us</h3>
             <ul className="space-y-4">
-              <li className="flex items-center gap-3 text-sm text-muted-foreground group cursor-pointer hover:text-primary transition-colors">
-                <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
-                  <Mail className="h-4 w-4" />
-                </div>
-                <span>support@freequademy.com</span>
+              <li>
+                <a
+                  href="mailto:support@freequademy.com"
+                  className="flex items-center gap-3 text-sm text-muted-foreground group hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                >
+                  <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
+                    <Mail className="h-4 w-4" />
+                  </div>
+                  <span>support@freequademy.com</span>
+                </a>
               </li>
-              <li className="flex items-center gap-3 text-sm text-muted-foreground group cursor-pointer hover:text-primary transition-colors">
-                <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
-                  <Phone className="h-4 w-4" />
-                </div>
-                <span>+91 1234567890</span>
-              </li>
-              <li className="flex items-start gap-3 text-sm text-muted-foreground">
-                <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                  <MapPin className="h-4 w-4" />
-                </div>
-                <span>123, Education Hub,<br />Mumbai, India</span>
-              </li>
+              {/* No phone support line or physical office exists yet — a
+                  placeholder number/address here would send students to a
+                  wrong/fake contact, so only the real email channel is listed. */}
             </ul>
           </div>
         </div>

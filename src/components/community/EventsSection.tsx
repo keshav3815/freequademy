@@ -5,25 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Users, Plus, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import type { User } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import type { Tables } from "@/integrations/supabase/types";
 
-interface Event {
-  id: string;
-  title: string;
-  description: string;
-  event_type: string;
-  scheduled_at: string;
-  duration_minutes: number;
-  max_attendees: number | null;
-  attendee_count: number;
-  is_registered: boolean;
-}
+type Event = Tables<"community_events"> & { is_registered: boolean };
 
 const EventsSection = () => {
   const [events, setEvents] = useState<Event[]>([]);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
+  const { isMentor, isAdmin } = useAuth();
+  const canCreateEvents = isMentor || isAdmin;
   const { toast } = useToast();
 
   useEffect(() => {
@@ -32,12 +27,16 @@ const EventsSection = () => {
   }, []);
 
   const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    // Local session (no network round trip); RLS enforces access server-side.
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user ?? null;
     setUser(user);
   };
 
   const fetchEvents = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    // Local session (no network round trip); RLS enforces access server-side.
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user ?? null;
     
     const { data, error } = await supabase
       .from("community_events")
@@ -53,7 +52,7 @@ const EventsSection = () => {
     } else {
       const eventsWithRegistration = data?.map(event => ({
         ...event,
-        is_registered: event.event_registrations?.some((r: any) => r.user_id === user?.id) || false
+        is_registered: event.event_registrations?.some((r) => r.user_id === user?.id) || false
       })) || [];
       setEvents(eventsWithRegistration);
     }
@@ -87,10 +86,12 @@ const EventsSection = () => {
           <h2 className="text-2xl font-semibold mb-2">Live Events</h2>
           <p className="text-muted-foreground">Join webinars, talks, and study sessions</p>
         </div>
-        <Button onClick={() => navigate("/community/create-event")} className="w-full sm:w-auto">
-          <Plus className="h-4 w-4 mr-2" />
-          Create Event
-        </Button>
+        {canCreateEvents && (
+          <Button onClick={() => navigate("/community/create-event")} className="w-full sm:w-auto">
+            <Plus className="h-4 w-4 mr-2" />
+            Create Event
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -142,7 +143,7 @@ const EventsSection = () => {
                   <Button
                     className="w-full"
                     onClick={(e) => handleRSVP(event.id, e)}
-                    disabled={event.max_attendees !== null && event.attendee_count >= event.max_attendees}
+                    disabled={event.max_attendees !== null && (event.attendee_count ?? 0) >= event.max_attendees}
                   >
                     RSVP
                   </Button>

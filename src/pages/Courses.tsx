@@ -1,230 +1,135 @@
-import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { Book, ClipboardCheck, Loader2, PlayCircle } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Book, Clock, Star, Lock, PlayCircle, Loader2, AlertCircle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import type { Database } from "@/integrations/supabase/types";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
-// Grade-specific subjects
-const getSubjectsByGrade = (grade: string) => {
-  const baseSubjects = [
-    { id: 1, name: "Mathematics", color: "from-blue-400 to-blue-600", free: true },
-    { id: 2, name: "Science", color: "from-green-400 to-green-600", free: true },
-    { id: 3, name: "English", color: "from-purple-400 to-purple-600", free: false },
-    { id: 4, name: "Social Studies", color: "from-orange-400 to-orange-600", free: false },
-    { id: 5, name: "Hindi", color: "from-pink-400 to-pink-600", free: false },
-  ];
+type SubjectProgress = Database["public"]["Functions"]["get_subject_progress"]["Returns"][number];
 
-  const gradeConfig: Record<string, any> = {
-    "6": baseSubjects.map(s => ({ ...s, chapters: 10 + Math.floor(Math.random() * 5), duration: `${20 + Math.floor(Math.random() * 10)} hrs`, rating: 4.3 + Math.random() * 0.5 })),
-    "7": baseSubjects.map(s => ({ ...s, chapters: 11 + Math.floor(Math.random() * 5), duration: `${22 + Math.floor(Math.random() * 10)} hrs`, rating: 4.4 + Math.random() * 0.5 })),
-    "8": baseSubjects.map(s => ({ ...s, chapters: 12 + Math.floor(Math.random() * 5), duration: `${25 + Math.floor(Math.random() * 10)} hrs`, rating: 4.4 + Math.random() * 0.5 })),
-    "9": baseSubjects.map(s => ({ ...s, chapters: 13 + Math.floor(Math.random() * 5), duration: `${28 + Math.floor(Math.random() * 10)} hrs`, rating: 4.5 + Math.random() * 0.5 })),
-    "10": baseSubjects.map(s => ({ ...s, chapters: 15 + Math.floor(Math.random() * 5), duration: `${35 + Math.floor(Math.random() * 10)} hrs`, rating: 4.6 + Math.random() * 0.5 })),
-  };
-
-  // For class 11 and 12, show stream-specific subjects
-  const scienceStream = [
-    { id: 1, name: "Mathematics", chapters: 18, duration: "45 hrs", rating: 4.7, color: "from-blue-400 to-blue-600", free: true },
-    { id: 2, name: "Physics", chapters: 16, duration: "40 hrs", rating: 4.6, color: "from-indigo-400 to-indigo-600", free: true },
-    { id: 3, name: "Chemistry", chapters: 15, duration: "38 hrs", rating: 4.5, color: "from-green-400 to-green-600", free: false },
-    { id: 4, name: "Biology", chapters: 14, duration: "36 hrs", rating: 4.6, color: "from-emerald-400 to-emerald-600", free: false },
-    { id: 5, name: "English", chapters: 10, duration: "25 hrs", rating: 4.4, color: "from-purple-400 to-purple-600", free: false },
-    { id: 6, name: "Computer Science", chapters: 12, duration: "30 hrs", rating: 4.8, color: "from-cyan-400 to-cyan-600", free: true },
-  ];
-
-  const commerceStream = [
-    { id: 1, name: "Accountancy", chapters: 16, duration: "40 hrs", rating: 4.6, color: "from-blue-400 to-blue-600", free: true },
-    { id: 2, name: "Business Studies", chapters: 14, duration: "35 hrs", rating: 4.5, color: "from-green-400 to-green-600", free: true },
-    { id: 3, name: "Economics", chapters: 12, duration: "30 hrs", rating: 4.4, color: "from-purple-400 to-purple-600", free: false },
-    { id: 4, name: "Mathematics", chapters: 15, duration: "38 hrs", rating: 4.7, color: "from-orange-400 to-orange-600", free: false },
-    { id: 5, name: "English", chapters: 10, duration: "25 hrs", rating: 4.4, color: "from-pink-400 to-pink-600", free: false },
-  ];
-
-  if (grade === "11" || grade === "12") {
-    return scienceStream; // Default to science stream, can be made selectable
-  }
-
-  return gradeConfig[grade] || gradeConfig["10"];
-};
+const GRADES = ["6", "7", "8", "9", "10", "11", "12"];
+const SUBJECT_COLORS = [
+  "from-blue-400 to-blue-600",
+  "from-green-400 to-green-600",
+  "from-purple-400 to-purple-600",
+  "from-orange-400 to-orange-600",
+  "from-pink-400 to-pink-600",
+  "from-cyan-400 to-cyan-600",
+];
 
 export default function Courses() {
-  const [searchParams] = useSearchParams();
-  const { toast } = useToast();
-  const classParam = searchParams.get("class");
-  const [selectedClass, setSelectedClass] = useState(classParam || "10");
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isStudent, setIsStudent] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { profile, isMentor } = useAuth();
+  const studentGrade = !isMentor && profile?.grade && GRADES.includes(profile.grade) ? profile.grade : null;
+  const selectedClass = searchParams.get("class") ?? studentGrade ?? "10";
+  const [subjects, setSubjects] = useState<SubjectProgress[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    fetchUserProfile();
-  }, []);
+    let cancelled = false;
+    setLoading(true);
+    setError(false);
+    supabase
+      .rpc("get_subject_progress", { _class_level: Number(selectedClass) })
+      .then(({ data, error: rpcError }) => {
+        if (cancelled) return;
+        if (rpcError) setError(true);
+        setSubjects(data ?? []);
+        setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedClass]);
 
-  const fetchUserProfile = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        const { data: profile, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single();
-
-        if (!error && profile) {
-          setUserProfile(profile);
-          if (profile.role === 'student' && profile.grade) {
-            setSelectedClass(profile.grade);
-            setIsStudent(true);
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching profile:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const subjects = getSubjectsByGrade(selectedClass);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  useDocumentMeta({
+    title: `Class ${selectedClass} Courses`,
+    description: `Free Class ${selectedClass} lessons and practice tests, organised by subject and chapter.`,
+  });
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
+
       <section className="py-12">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-            <div className="animate-slide-up">
+            <div>
               <h1 className="text-3xl md:text-4xl font-bold mb-2">
                 Class <span className="bg-gradient-primary bg-clip-text text-transparent">{selectedClass}</span> Courses
               </h1>
-              <p className="text-muted-foreground">
-                {isStudent ? `Your registered class curriculum` : `Choose your subject and start learning with interactive content`}
-              </p>
+              <p className="text-muted-foreground">Every lesson and practice test is free.</p>
             </div>
-            
-            {!isStudent ? (
-              <Select value={selectedClass} onValueChange={setSelectedClass}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select Class" />
-                </SelectTrigger>
-                <SelectContent>
-                  {[6, 7, 8, 9, 10, 11, 12].map((cls) => (
-                    <SelectItem key={cls} value={cls.toString()}>
-                      Class {cls}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : (
-              <Badge variant="secondary" className="px-4 py-2">
-                Registered: Class {selectedClass}
-              </Badge>
-            )}
+
+            <Select value={selectedClass} onValueChange={(value) => setSearchParams({ class: value })}>
+              <SelectTrigger className="w-[180px]" aria-label="Select class">
+                <SelectValue placeholder="Select Class" />
+              </SelectTrigger>
+              <SelectContent>
+                {GRADES.map((cls) => (
+                  <SelectItem key={cls} value={cls}>
+                    Class {cls}{cls === studentGrade ? " (yours)" : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          {isStudent && (
-            <Alert className="mb-6">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                You are viewing courses for Class {selectedClass} based on your registration. 
-                Contact support if you need to change your registered class.
-              </AlertDescription>
-            </Alert>
+          {loading ? (
+            <div className="flex justify-center py-20" role="status" aria-label="Loading courses">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : error ? (
+            <p className="text-center text-muted-foreground py-20">Courses could not be loaded. Please try again.</p>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {subjects.map((subject, index) => {
+                const pct = subject.lesson_count > 0 ? Math.round((subject.lessons_completed / subject.lesson_count) * 100) : 0;
+                const hasContent = subject.lesson_count > 0 || subject.test_count > 0;
+                return (
+                  <Card key={subject.subject_id} className="overflow-hidden hover:shadow-xl transition-shadow">
+                    <div className={`h-28 bg-gradient-to-br ${SUBJECT_COLORS[index % SUBJECT_COLORS.length]} relative`}>
+                      <div className="absolute inset-0 bg-black/20" />
+                      <h2 className="absolute bottom-4 left-4 text-2xl font-bold text-white">{subject.subject_name}</h2>
+                      {!hasContent && (
+                        <Badge variant="secondary" className="absolute top-4 right-4">Content coming soon</Badge>
+                      )}
+                    </div>
+                    <div className="p-6 space-y-4">
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1"><Book className="h-4 w-4" />{subject.chapter_count} chapters</span>
+                        <span className="flex items-center gap-1"><PlayCircle className="h-4 w-4" />{subject.lesson_count} lessons</span>
+                        <span className="flex items-center gap-1"><ClipboardCheck className="h-4 w-4" />{subject.test_count} tests</span>
+                      </div>
+                      {subject.lesson_count > 0 && (
+                        <div>
+                          <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                            <span>{subject.lessons_completed} of {subject.lesson_count} lessons done</span>
+                            <span>{pct}%</span>
+                          </div>
+                          <Progress value={pct} className="h-2" aria-label={`${subject.subject_name} progress`} />
+                        </div>
+                      )}
+                      <Button asChild variant={hasContent ? "gradient" : "outline"} className="w-full">
+                        <Link to={`/courses/${subject.subject_id}`}>
+                          {subject.lessons_completed > 0 ? "Continue learning" : "Open course"}
+                        </Link>
+                      </Button>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
           )}
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {subjects.map((subject, index) => (
-              <Card 
-                key={subject.id}
-                className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 animate-scale-in"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <div className={`h-32 bg-gradient-to-br ${subject.color} relative`}>
-                  <div className="absolute inset-0 bg-black/20" />
-                  <div className="absolute bottom-4 left-4 text-white">
-                    <h3 className="text-2xl font-bold">{subject.name}</h3>
-                  </div>
-                  {subject.free && (
-                    <Badge className="absolute top-4 right-4 bg-success text-success-foreground">
-                      Free Demo
-                    </Badge>
-                  )}
-                </div>
-                
-                <div className="p-6">
-                  <div className="flex items-center gap-4 mb-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Book className="h-4 w-4" />
-                      {subject.chapters} Chapters
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {subject.duration}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 text-yellow-500" />
-                      {subject.rating}
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center justify-between text-sm">
-                      <span>Video Lessons</span>
-                      <span className="font-semibold">{subject.chapters * 3}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span>Practice Tests</span>
-                      <span className="font-semibold">{subject.chapters * 5}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span>Assignments</span>
-                      <span className="font-semibold">{subject.chapters * 2}</span>
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    variant={subject.free ? "gradient" : "outline"} 
-                    className="w-full"
-                  >
-                    {subject.free ? (
-                      <>
-                        <PlayCircle className="h-4 w-4 mr-2" />
-                        Start Learning
-                      </>
-                    ) : (
-                      <>
-                        <Lock className="h-4 w-4 mr-2" />
-                        Unlock Course
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </Card>
-            ))}
-          </div>
         </div>
       </section>
 

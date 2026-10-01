@@ -53,7 +53,7 @@ export function LoginModal({ isOpen, onClose, userRole }: LoginModalProps) {
         onClose();
         
         if (profile?.role === 'mentor') {
-          navigate("/teacher-dashboard");
+          navigate("/teacher");
         } else {
           navigate("/dashboard");
         }

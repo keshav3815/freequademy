@@ -9,6 +9,9 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
+import MySessions from "@/components/mentorship/MySessions";
 
 interface MentorshipProgram {
   id: string;
@@ -54,6 +57,10 @@ export default function Mentorship() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'academic' | 'skill-based'>('all');
+  const [participantCounts, setParticipantCounts] = useState<Record<string, number>>({});
+  const [registeringId, setRegisteringId] = useState<string | null>(null);
+  const [mySessionsKey, setMySessionsKey] = useState(0);
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     fetchData();
@@ -65,7 +72,8 @@ export default function Mentorship() {
       const { data: programsData, error: programsError } = await supabase
         .from('mentorship_programs')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(50);
 
       if (programsError) throw programsError;
       setPrograms((programsData || []) as MentorshipProgram[]);
@@ -75,7 +83,8 @@ export default function Mentorship() {
         .from('mentors_public')
         .select('*')
         .eq('is_verified', true)
-        .order('rating', { ascending: false });
+        .order('rating', { ascending: false })
+        .limit(50);
 
       if (mentorsError) throw mentorsError;
       setMentors((mentorsData || []) as MentorProfile[]);
@@ -84,7 +93,7 @@ export default function Mentorship() {
       const { data: sessionsData, error: sessionsError } = await supabase
         .from('mentorship_sessions')
         .select(`
-          *,
+          id, title, description, session_type, scheduled_at, duration_minutes, status, max_participants, mentor_id,
           mentor:mentors_public(*)
         `)
         .eq('status', 'scheduled')
@@ -94,6 +103,12 @@ export default function Mentorship() {
 
       if (sessionsError) throw sessionsError;
       setSessions((sessionsData || []) as Session[]);
+
+      const ids = (sessionsData || []).map((s) => s.id);
+      if (ids.length > 0) {
+        const { data: counts } = await supabase.rpc('session_participant_counts', { _session_ids: ids });
+        setParticipantCounts(Object.fromEntries((counts || []).map((c) => [c.session_id, c.participant_count])));
+      }
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -108,7 +123,9 @@ export default function Mentorship() {
   };
 
   const handleSessionRegistration = async (sessionId: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
+    // Local session (no network round trip); RLS enforces access server-side.
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user ?? null;
     
     if (!user) {
       toast({
@@ -120,34 +137,32 @@ export default function Mentorship() {
       return;
     }
 
-    try {
-      const { error } = await supabase
-        .from('session_participants')
-        .insert({
-          session_id: sessionId,
-          student_id: user.id,
-          status: 'registered'
-        });
+    setRegisteringId(sessionId);
+    const { error } = await supabase.rpc('register_for_session', { _session_id: sessionId });
+    setRegisteringId(null);
 
-      if (error) throw error;
-
+    if (error) {
       toast({
-        title: "Success",
-        description: "Successfully registered for the session",
-      });
-    } catch (error) {
-      console.error('Registration error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to register for session",
+        title: "Could not register",
+        description: error.message || "Failed to register for session",
         variant: "destructive",
       });
+      return;
     }
+
+    toast({
+      title: "Registered",
+      description: "You'll find this session under My Sessions.",
+    });
+    setMySessionsKey((k) => k + 1);
+    fetchData();
   };
 
   const filteredPrograms = selectedCategory === 'all' 
     ? programs 
     : programs.filter(p => p.category === selectedCategory);
+
+  useDocumentMeta({ title: "Mentorship", description: "One-on-one and group mentorship sessions with verified mentors, free for students." });
 
   return (
     <div className="min-h-screen bg-background">
@@ -162,10 +177,11 @@ export default function Mentorship() {
         </div>
 
         <Tabs defaultValue="programs" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className={`grid w-full h-auto ${isAuthenticated ? "grid-cols-2 sm:grid-cols-5" : "grid-cols-2 sm:grid-cols-4"}`}>
             <TabsTrigger value="programs">Programs</TabsTrigger>
             <TabsTrigger value="mentors">Our Mentors</TabsTrigger>
             <TabsTrigger value="sessions">Upcoming Sessions</TabsTrigger>
+            {isAuthenticated && <TabsTrigger value="mine">My Sessions</TabsTrigger>}
             <TabsTrigger value="apply">Become a Mentor</TabsTrigger>
           </TabsList>
 
@@ -224,7 +240,6 @@ export default function Mentorship() {
                         Max {program.max_participants} participants
                       </div>
                     </div>
-                    <Button className="w-full">View Details</Button>
                   </CardContent>
                 </Card>
               ))}
@@ -255,7 +270,7 @@ export default function Mentorship() {
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center text-sm">
                         <Star className="mr-2 h-4 w-4 text-yellow-500" />
-                        {mentor.rating.toFixed(1)} ({mentor.total_sessions} sessions)
+                        {Number(mentor.rating ?? 0).toFixed(1)} ({mentor.total_sessions ?? 0} sessions)
                       </div>
                       <div className="flex items-center text-sm text-muted-foreground">
                         <Clock className="mr-2 h-4 w-4" />
@@ -277,7 +292,6 @@ export default function Mentorship() {
                       </Badge>
                     )}
 
-                    <Button className="w-full">View Profile</Button>
                   </CardContent>
                 </Card>
               ))}
@@ -318,21 +332,28 @@ export default function Mentorship() {
                       </div>
                       <div className="flex items-center">
                         <Users className="mr-2 h-4 w-4" />
-                        Max {session.max_participants} participants
+                        {participantCounts[session.id] ?? 0} / {session.max_participants} registered
                       </div>
                     </div>
 
                     <Button 
                       className="w-full" 
+                      disabled={registeringId === session.id || (participantCounts[session.id] ?? 0) >= session.max_participants}
                       onClick={() => handleSessionRegistration(session.id)}
                     >
-                      Register for Session
+                      {(participantCounts[session.id] ?? 0) >= session.max_participants ? "Session full" : "Register for Session"}
                     </Button>
                   </CardContent>
                 </Card>
               ))}
             </div>
           </TabsContent>
+
+          {isAuthenticated && (
+            <TabsContent value="mine" className="space-y-6">
+              <MySessions refreshKey={mySessionsKey} />
+            </TabsContent>
+          )}
 
           <TabsContent value="apply">
             <Card className="max-w-2xl mx-auto">

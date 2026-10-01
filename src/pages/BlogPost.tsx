@@ -8,6 +8,7 @@ import { ArrowLeft, BookOpen, Lightbulb, HelpCircle, CheckCircle } from "lucide-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 interface PracticeQuestion {
   question: string;
@@ -41,7 +42,7 @@ const BlogPost = () => {
       const { data, error } = await supabase
         .from("blog_posts")
         .select("*")
-        .eq("slug", postId)
+        .eq("slug", postId ?? "")
         .eq("status", "published")
         .single();
       
@@ -53,6 +54,11 @@ const BlogPost = () => {
       } as BlogPostData;
     },
     enabled: !!postId,
+  });
+
+  useDocumentMeta({
+    title: post?.title ?? "Blog",
+    description: post ? `${post.introduction.slice(0, 155)}` : undefined,
   });
 
   if (isLoading) {

@@ -4,27 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MessageSquare, ThumbsUp, Plus } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import type { Tables } from "@/integrations/supabase/types";
 
-interface Category {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-}
+type Category = Tables<"forum_categories">;
 
-interface Thread {
-  id: string;
-  title: string;
-  content: string;
-  upvotes: number;
-  reply_count: number;
-  created_at: string;
-  author: {
-    full_name: string;
-  };
-}
+type Thread = Pick<Tables<"forum_threads">, "id" | "title" | "content" | "upvotes" | "reply_count" | "created_at" | "author_id" | "is_pinned"> & {
+  author: { full_name: string };
+};
 
 const ForumSection = () => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -54,9 +42,10 @@ const ForumSection = () => {
   const fetchThreads = async () => {
     let query = supabase
       .from("forum_threads")
-      .select("*")
+      .select("id, title, content, upvotes, reply_count, created_at, author_id, is_pinned")
+      .order("is_pinned", { ascending: false })
       .order("created_at", { ascending: false })
-      .limit(10);
+      .limit(20);
 
     if (selectedCategory) {
       query = query.eq("category_id", selectedCategory);
@@ -69,23 +58,17 @@ const ForumSection = () => {
       return;
     }
 
-    // Fetch author names separately
-    const threadsWithAuthors = await Promise.all(
-      (threadsData || []).map(async (thread) => {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("full_name")
-          .eq("id", thread.author_id)
-          .single();
-        
-        return {
-          ...thread,
-          author: {
-            full_name: profile?.full_name || "Anonymous"
-          }
-        };
-      })
-    );
+    // One batched lookup for author display names (public_profiles view).
+    const authorIds = [...new Set((threadsData || []).map((t) => t.author_id))];
+    const { data: authors } = authorIds.length
+      ? await supabase.from("public_profiles").select("id, full_name").in("id", authorIds)
+      : { data: [] as { id: string; full_name: string | null }[] };
+    const nameById = new Map((authors || []).map((a) => [a.id, a.full_name]));
+
+    const threadsWithAuthors = (threadsData || []).map((thread) => ({
+      ...thread,
+      author: { full_name: nameById.get(thread.author_id) || "Student" },
+    }));
 
     setThreads(threadsWithAuthors);
   };
@@ -133,11 +116,8 @@ const ForumSection = () => {
           </Card>
         ) : (
           threads.map((thread) => (
-            <Card
-              key={thread.id}
-              className="hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => navigate(`/community/thread/${thread.id}`)}
-            >
+            <Link key={thread.id} to={`/community/thread/${thread.id}`} className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <Card className="hover:shadow-md transition-shadow">
               <CardHeader>
                 <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
                   <CardTitle className="text-lg">{thread.title}</CardTitle>
@@ -153,13 +133,14 @@ const ForumSection = () => {
                   </div>
                 </div>
                 <CardDescription>
-                  By {thread.author?.full_name || "Anonymous"} • {new Date(thread.created_at).toLocaleDateString()}
+                  By {thread.author?.full_name || "Anonymous"} • {thread.created_at && new Date(thread.created_at).toLocaleDateString()}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground line-clamp-2">{thread.content}</p>
               </CardContent>
             </Card>
+            </Link>
           ))
         )}
       </div>

@@ -1,14 +1,19 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
 Allow: /
+# Account/app pages have no SEO value and shouldn't be indexed — they either
+# redirect anonymous visitors to /login or show only a signed-in user's own
+# data, so there's nothing generic to rank here.
+Disallow: /dashboard
+Disallow: /teacher-dashboard
+Disallow: /mentor-dashboard
+Disallow: /admin
+Disallow: /doubts
+Disallow: /login
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /signup-student
+Disallow: /signup-mentor
+Disallow: /mentor-application
+Disallow: /teach/
+
+Sitemap: https://freequademy.com/sitemap.xml

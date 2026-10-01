@@ -1,135 +1,61 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+// Legacy AI doubt endpoint, kept for the current frontend. The workflow itself
+// lives in ../_shared/doubt.ts and is also served as POST /v1/ai/doubts by the
+// `api` function. Response shape is unchanged: { answer, doubtId, remaining }
+// or { error }.
+import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { type DoubtDb, answerDoubt } from "../_shared/doubt.ts";
+import { providersFromEnv } from "../_shared/ai/provider.ts";
+import { corsHeaders, requestIdFrom } from "../_shared/http.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+function json(body: unknown, status: number, requestId: string) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json", "x-request-id": requestId },
+  });
+}
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+Deno.serve(async (req) => {
+  const requestId = requestIdFrom(req.headers);
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405, requestId);
 
   try {
-    // Verify authentication
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized - Please log in to use the doubt solver" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return json({ error: "Unauthorized - Please log in to use the doubt solver" }, 401, requestId);
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
+    // User-scoped client: every database call runs under the caller's JWT and
+    // is subject to RLS. No service-role key is used here.
+    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader, "x-request-id": requestId } },
+    });
+    const { data: claims, error: claimsError } = await supabase.auth.getClaims(authHeader.slice(7));
+    const userId = claims?.claims?.sub;
+    if (claimsError || !userId) return json({ error: "Unauthorized - Invalid session" }, 401, requestId);
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-    
-    if (claimsError || !claimsData?.claims) {
-      console.error("Auth verification failed:", claimsError);
-      return new Response(
-        JSON.stringify({ error: "Unauthorized - Invalid session" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return json({ error: "Request body must be valid JSON." }, 400, requestId);
     }
 
-    const userId = claimsData.claims.sub;
-    console.log(`Authenticated user: ${userId}`);
-
-    const { question, subject, grade, image } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
-    }
-
-    console.log(`Processing doubt for grade ${grade}, has image: ${!!image}`);
-
-    const systemPrompt = `You are an expert academic tutor helping students with their doubts. 
-You are assisting a student in grade ${grade || "high school"}.
-${subject ? `The question is related to ${subject}.` : ""}
-
-Guidelines:
-- Provide clear, step-by-step explanations
-- Use simple language appropriate for the student's grade level
-- Include examples when helpful
-- If it's a math problem, show the working
-- If an image is provided, analyze it carefully (math problems, diagrams, equations, graphs, etc.)
-- Provide step-by-step solutions when solving problems from images
-- Be encouraging and supportive
-- Keep answers concise but thorough
-- Use markdown formatting for better readability`;
-
-    // Build user message content - support both text and image
-    const userContent: any[] = [];
-    
-    if (question) {
-      userContent.push({ type: "text", text: question });
-    }
-    
-    if (image) {
-      userContent.push({
-        type: "image_url",
-        image_url: { url: image }
-      });
-    }
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
+    const outcome = await answerDoubt(
+      {
+        db: supabase as unknown as DoubtDb,
+        userId,
+        providers: providersFromEnv((key) => Deno.env.get(key)),
+        log: (event, data) => console.log(JSON.stringify({ event, request_id: requestId, user_id: userId, ...data })),
       },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userContent.length === 1 && !image ? question : userContent },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Too many requests. Please try again in a moment." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Service temporarily unavailable. Please try again later." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      
-      return new Response(JSON.stringify({ error: "Failed to get AI response" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      body,
+    );
+    if (!outcome.ok) {
+      return json({ error: outcome.message, ...(outcome.remaining !== undefined ? { remaining: outcome.remaining } : {}) }, outcome.status, requestId);
     }
-
-    const data = await response.json();
-    const answer = data.choices?.[0]?.message?.content || "Sorry, I couldn't generate a response.";
-
-    console.log("Successfully generated response");
-
-    return new Response(JSON.stringify({ answer }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return json({ answer: outcome.answer, doubtId: outcome.doubtId, remaining: outcome.remaining }, 200, requestId);
   } catch (error) {
-    console.error("Doubt solver error:", error);
-    return new Response(JSON.stringify({ error: error.message || "An error occurred" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    console.error(JSON.stringify({ event: "doubt_solver_error", request_id: requestId, message: error instanceof Error ? error.message : String(error) }));
+    return json({ error: "An unexpected error occurred" }, 500, requestId);
   }
 });

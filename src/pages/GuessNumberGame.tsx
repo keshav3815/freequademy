@@ -137,8 +137,17 @@ const GuessNumberGame = () => {
               return (
                 <Card
                   key={diff}
-                  className="p-6 cursor-pointer hover-lift group hover:border-primary/50 transition-all"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Play ${config.label} difficulty, numbers from ${config.min} to ${config.max}`}
+                  className="p-6 cursor-pointer hover-lift group hover:border-primary/50 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   onClick={() => initializeGame(diff)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      initializeGame(diff);
+                    }
+                  }}
                 >
                   <div className="flex items-center gap-4">
                     <div className={`p-3 rounded-xl ${

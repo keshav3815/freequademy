@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Mail, Lock, User, GraduationCap } from "lucide-react";
-import { User as SupabaseUser, Session } from "@supabase/supabase-js";
-import { LoginModal } from "@/components/LoginModal";
+import { useAuth } from "@/contexts/AuthContext";
 
 const SignupMentor = () => {
   const navigate = useNavigate();
@@ -19,35 +18,19 @@ const SignupMentor = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [subject, setSubject] = useState("");
-  const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [showLoginModal, setShowLoginModal] = useState(false);
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const submittingRef = useRef(false);
 
+  // Someone who is already signed in applies through the application form.
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        navigate("/teacher-dashboard");
-      }
-    });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        navigate("/teacher-dashboard");
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    if (!authLoading && isAuthenticated && !submittingRef.current) {
+      navigate("/mentor-application", { replace: true });
+    }
+  }, [authLoading, isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (password !== confirmPassword) {
       toast({
         title: "Passwords don't match",
@@ -58,35 +41,68 @@ const SignupMentor = () => {
     }
 
     setIsLoading(true);
+    submittingRef.current = true;
 
+    // Mentor status is never self-assigned: every account starts as a student
+    // and an administrator approves the mentor application (the database
+    // ignores any role sent from here).
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/teacher-dashboard`,
-        data: {
-          full_name: fullName,
-          role: 'mentor',
-          subject: subject,
-        },
+        emailRedirectTo: `${window.location.origin}/mentor-application`,
+        data: { full_name: fullName },
       },
     });
 
     if (error) {
+      submittingRef.current = false;
+      setIsLoading(false);
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Could not create account",
+        description: "Please check your details and try again. If you already have an account, log in and apply from your dashboard.",
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: "Success!",
-        description: "Account created successfully! Please login to continue.",
-      });
-      setShowLoginModal(true);
+      return;
     }
 
+    if (data.session && data.user) {
+      const { error: applicationError } = await supabase.from("mentor_applications").insert({
+        user_id: data.user.id,
+        full_name: fullName,
+        email,
+        expertise: subject
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        status: "pending",
+      });
+
+      setIsLoading(false);
+      if (applicationError) {
+        toast({
+          title: "Account created",
+          description: "Please complete your mentor application.",
+        });
+        navigate("/mentor-application", { replace: true });
+        return;
+      }
+
+      toast({
+        title: "Application submitted",
+        description: "Your account is ready. An administrator will review your mentor application.",
+      });
+      navigate("/dashboard", { replace: true });
+      return;
+    }
+
+    // Email confirmation is required before the application can be saved.
     setIsLoading(false);
+    toast({
+      title: "Check your email",
+      description: "Confirm your email address, then log in to complete your mentor application.",
+    });
+    navigate("/login", { replace: true, state: { from: "/mentor-application" } });
   };
 
   return (
@@ -99,9 +115,9 @@ const SignupMentor = () => {
             </Link>
             <GraduationCap className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold">Sign up as Mentor</CardTitle>
+          <CardTitle className="text-2xl font-bold">Apply to be a Mentor</CardTitle>
           <CardDescription>
-            Create your mentor account to start teaching on freequademy
+            Create your account and apply to mentor on freequademy. Applications are reviewed by our team before mentor access is granted.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -183,7 +199,7 @@ const SignupMentor = () => {
             </div>
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Creating account..." : "Sign up as Mentor"}
+              {isLoading ? "Submitting..." : "Create account & apply"}
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">
@@ -202,12 +218,7 @@ const SignupMentor = () => {
           </form>
         </CardContent>
       </Card>
-      
-      <LoginModal 
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        userRole="mentor"
-      />
+
     </div>
   );
 };

@@ -1,0 +1,21 @@
+# Cloudflare Worker for api.freequademy.com (free Workers plan: 100k requests/day).
+# Deploy: npx wrangler deploy --env staging   (then --env production)
+# Secrets (never committed): npx wrangler secret put SUPABASE_ANON_KEY --env <env>
+# Runbook: docs/architecture/runbooks/gateway.md
+name = "freequademy-gateway"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+
+[env.staging]
+name = "freequademy-gateway-staging"
+routes = [{ pattern = "api-staging.freequademy.com", custom_domain = true }]
+[env.staging.vars]
+SUPABASE_ORIGIN = "https://<staging-project-ref>.supabase.co"
+ALLOWED_ORIGINS = "http://localhost:8080,https://*.vercel.app"
+
+[env.production]
+name = "freequademy-gateway"
+routes = [{ pattern = "api.freequademy.com", custom_domain = true }]
+[env.production.vars]
+SUPABASE_ORIGIN = "https://odawqbevdzpkwkxbggnf.supabase.co"
+ALLOWED_ORIGINS = "https://freequademy.com,https://www.freequademy.com"
