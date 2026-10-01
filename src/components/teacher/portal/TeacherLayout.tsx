@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import TeacherSidebar from "./TeacherSidebar";
 import TeacherHeader from "./TeacherHeader";
+import { Toaster as Sonner } from "@/components/ui/sonner";
 import "./portal.css";
 
 const COLLAPSE_KEY = "tp:sidebar-collapsed";
@@ -77,6 +78,7 @@ export default function TeacherLayout() {
       <a href="#tp-main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-card focus:px-3 focus:py-2 focus:shadow">
         Skip to content
       </a>
+      <Sonner />
 
       <aside
         className={cn(

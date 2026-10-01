@@ -1,5 +1,7 @@
 # Freequademy Architecture V1.0 — Audit, Gap Report and Master Plan
 
+> **Update 2026-10-01:** the owner set a zero-cost rule (free and open-source only). Paid items in this plan (Supabase Pro, PITR, paid staging compute, Sentry SaaS, custom-domain add-on) are replaced by free equivalents. Production is already in Mumbai, so no region migration is needed. Current status and evidence: [`v1-implementation-report.md`](v1-implementation-report.md).
+
 **Status:** AUDIT COMPLETE — awaiting approval before Phase 0 implementation.
 **Date:** 2026-10-01 · **Source of truth:** "Freequademy Target Architecture" doc · **Prior work:** `docs/remediation/phase-0 … phase-10`.
 

@@ -163,6 +163,48 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_role: string
+          after: Json | null
+          before: Json | null
+          changed_fields: string[] | null
+          created_at: string
+          id: number
+          request_id: string | null
+          resource_id: string | null
+          resource_type: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_role: string
+          after?: Json | null
+          before?: Json | null
+          changed_fields?: string[] | null
+          created_at?: string
+          id?: never
+          request_id?: string | null
+          resource_id?: string | null
+          resource_type: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_role?: string
+          after?: Json | null
+          before?: Json | null
+          changed_fields?: string[] | null
+          created_at?: string
+          id?: never
+          request_id?: string | null
+          resource_id?: string | null
+          resource_type?: string
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           author_id: string | null
@@ -266,6 +308,87 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      client_errors: {
+        Row: {
+          browser: string | null
+          created_at: string
+          environment: string
+          error_type: string | null
+          id: number
+          message: string | null
+          os: string | null
+          release: string | null
+          request_id: string | null
+          route: string | null
+          source: string | null
+          stack: string | null
+        }
+        Insert: {
+          browser?: string | null
+          created_at?: string
+          environment: string
+          error_type?: string | null
+          id?: never
+          message?: string | null
+          os?: string | null
+          release?: string | null
+          request_id?: string | null
+          route?: string | null
+          source?: string | null
+          stack?: string | null
+        }
+        Update: {
+          browser?: string | null
+          created_at?: string
+          environment?: string
+          error_type?: string | null
+          id?: never
+          message?: string | null
+          os?: string | null
+          release?: string | null
+          request_id?: string | null
+          route?: string | null
+          source?: string | null
+          stack?: string | null
+        }
+        Relationships: []
+      }
+      client_vitals: {
+        Row: {
+          connection: string | null
+          created_at: string
+          environment: string
+          id: number
+          metric: string
+          rating: string | null
+          release: string | null
+          route: string
+          value: number
+        }
+        Insert: {
+          connection?: string | null
+          created_at?: string
+          environment: string
+          id?: never
+          metric: string
+          rating?: string | null
+          release?: string | null
+          route: string
+          value: number
+        }
+        Update: {
+          connection?: string | null
+          created_at?: string
+          environment?: string
+          id?: never
+          metric?: string
+          rating?: string | null
+          release?: string | null
+          route?: string
+          value?: number
+        }
+        Relationships: []
       }
       club_members: {
         Row: {
@@ -1735,6 +1858,18 @@ export type Database = {
           sort_order: number
         }[]
       }
+      get_client_error_summary: {
+        Args: { _days?: number }
+        Returns: {
+          environment: string
+          error_type: string
+          last_release: string
+          last_seen: string
+          message: string
+          occurrences: number
+          route: string
+        }[]
+      }
       get_escalated_doubts: {
         Args: { _limit?: number }
         Returns: {
@@ -1746,6 +1881,16 @@ export type Database = {
           question: string
           student_name: string
           subject: string
+        }[]
+      }
+      get_job_health: {
+        Args: never
+        Returns: {
+          jobs: number
+          last_error: string
+          oldest_scheduled_at: string
+          status: string
+          type: string
         }[]
       }
       get_learning_summary: {
@@ -1805,6 +1950,10 @@ export type Database = {
       get_session_meeting_link: {
         Args: { _session_id: string }
         Returns: string
+      }
+      get_student_dashboard: {
+        Args: { _class_level: number; _from: string; _to: string }
+        Returns: Json
       }
       get_study_note_stats: {
         Args: { _class_level: number }
@@ -2031,6 +2180,17 @@ export type Database = {
           subject_name: string
         }[]
       }
+      get_web_vitals_summary: {
+        Args: { _days?: number; _environment?: string }
+        Returns: {
+          metric: string
+          p50: number
+          p75: number
+          p95: number
+          route: string
+          samples: number
+        }[]
+      }
       get_weekly_summary: {
         Args: never
         Returns: {
@@ -2067,6 +2227,22 @@ export type Database = {
       is_mentor: { Args: { _user_id: string }; Returns: boolean }
       is_moderator: { Args: { _user_id: string }; Returns: boolean }
       is_my_student: { Args: { _student_id: string }; Returns: boolean }
+      jobs_claim: {
+        Args: { _limit?: number; _types: string[] }
+        Returns: {
+          attempt_count: number
+          id: number
+          payload: Json
+          request_id: string
+          type: string
+        }[]
+      }
+      jobs_complete: { Args: { _id: number }; Returns: undefined }
+      jobs_enqueue: {
+        Args: { _idempotency_key: string; _payload: Json; _type: string }
+        Returns: number
+      }
+      jobs_fail: { Args: { _error: string; _id: number }; Returns: string }
       mark_reply_solution: { Args: { _reply_id: string }; Returns: undefined }
       record_lesson_progress: {
         Args: { _completed?: boolean; _lesson_id: string }
@@ -2079,6 +2255,19 @@ export type Database = {
       }
       reorder_teacher_lessons: {
         Args: { _lesson_ids: string[] }
+        Returns: undefined
+      }
+      report_client_error: { Args: { _report: Json }; Returns: undefined }
+      report_web_vital: {
+        Args: {
+          _connection?: string
+          _environment: string
+          _metric: string
+          _rating: string
+          _release?: string
+          _route: string
+          _value: number
+        }
         Returns: undefined
       }
       review_attempt: {
@@ -2105,6 +2294,14 @@ export type Database = {
         Args: { _session_id: string; _status: string; _student_id: string }
         Returns: undefined
       }
+      set_platform_role: {
+        Args: {
+          _grant: boolean
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: undefined
+      }
       set_thread_pinned: {
         Args: { _pinned: boolean; _thread_id: string }
         Returns: undefined
@@ -2122,7 +2319,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "moderator"
+      app_role: "admin" | "moderator" | "super_admin"
       user_role: "student" | "mentor"
     }
     CompositeTypes: {
@@ -2251,7 +2448,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator"],
+      app_role: ["admin", "moderator", "super_admin"],
       user_role: ["student", "mentor"],
     },
   },

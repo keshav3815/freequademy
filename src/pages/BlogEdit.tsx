@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Plus, Trash2, ArrowLeft, Loader2 } from "lucide-react";
 
 const classOptions = ["Class 6", "Class 7", "Class 8", "Class 9", "Class 10", "Class 11", "Class 12"];
@@ -242,6 +243,7 @@ const BlogEdit = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
+        <Sonner />
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
@@ -253,6 +255,7 @@ const BlogEdit = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
+      <Sonner />
       
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         <Link to="/teacher/blog">

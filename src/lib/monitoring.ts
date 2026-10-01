@@ -1,51 +1,45 @@
 /**
- * Minimal client-side error reporting.
+ * Client-side error reporting (Architecture V1, zero-cost monitoring).
  *
  * Captures render errors (ErrorBoundary), uncaught errors and unhandled
- * promise rejections in one place. Without a configured endpoint it only logs
- * to the console. To forward events to an error tracker, set
- * VITE_ERROR_REPORTING_URL to an endpoint that accepts JSON POSTs (for example
- * a Sentry tunnel or a Supabase Edge Function) — see docs/observability.md.
+ * promise rejections in one place. Reports are scrubbed in the browser
+ * (src/lib/telemetry/sanitize.ts) and sent to the report_client_error RPC,
+ * which scrubs again, caps fields and rate-limits — the data stays in our own
+ * Supabase project. Nothing is sent unless VITE_APP_ENV is set (staging or
+ * production), so local development only logs to the console.
  */
 
-import { captureToSentry } from "./sentry";
+import { buildErrorReport } from "./telemetry/sanitize";
 
 interface ErrorContext {
   componentStack?: string;
   [key: string]: unknown;
 }
 
-const endpoint = import.meta.env.VITE_ERROR_REPORTING_URL as string | undefined;
+const environment = import.meta.env.VITE_APP_ENV as string | undefined;
 let reportedThisSession = 0;
 const MAX_REPORTS_PER_SESSION = 20;
 
 export function reportError(error: unknown, context: ErrorContext = {}) {
   const err = error instanceof Error ? error : new Error(String(error));
   console.error("[freequademy]", err, context);
-  captureToSentry(err, typeof context.source === "string" ? { source: context.source } : {});
 
-  if (!endpoint || reportedThisSession >= MAX_REPORTS_PER_SESSION) return;
+  if (!environment || reportedThisSession >= MAX_REPORTS_PER_SESSION) return;
   reportedThisSession++;
 
-  const payload = {
-    message: err.message.slice(0, 1000),
-    stack: err.stack?.slice(0, 4000),
-    path: window.location.pathname, // no query string: it can contain tokens
-    release: import.meta.env.VITE_APP_RELEASE ?? "dev",
+  const report = buildErrorReport(err, {
+    environment,
+    release: import.meta.env.VITE_APP_RELEASE,
+    pathname: window.location.pathname,
     userAgent: navigator.userAgent,
-    ...context,
-  };
+    source: typeof context.source === "string" ? context.source : "react",
+  });
 
-  try {
-    const body = JSON.stringify(payload);
-    if (navigator.sendBeacon) {
-      navigator.sendBeacon(endpoint, new Blob([body], { type: "application/json" }));
-    } else {
-      void fetch(endpoint, { method: "POST", body, headers: { "Content-Type": "application/json" }, keepalive: true });
-    }
-  } catch {
-    // reporting must never throw
-  }
+  // The Supabase client is loaded on demand so reporting adds nothing to the
+  // initial bundle; reporting must never throw.
+  void import("@/integrations/supabase/client")
+    .then(({ supabase }) => supabase.rpc("report_client_error", { _report: report as never }))
+    .catch(() => undefined);
 }
 
 export function installGlobalErrorHandlers() {

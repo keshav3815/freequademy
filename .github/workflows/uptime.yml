@@ -1,0 +1,33 @@
+name: Uptime
+
+# Free uptime check (zero-cost rule). A failed scheduled run makes GitHub email
+# the repository owner, which is the alert. Targets are public health
+# endpoints only; no credentials are used.
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ vars.UPTIME_ENABLED == 'true' }}
+    steps:
+      - name: Check endpoints
+        env:
+          TARGETS: ${{ vars.UPTIME_TARGETS }}
+        run: |
+          # UPTIME_TARGETS: space-separated URLs, e.g.
+          # "https://freequademy.com https://api.freequademy.com/v1/health"
+          failed=0
+          for url in $TARGETS; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 --retry 2 --retry-delay 5 "$url" || true)
+            echo "$url -> $code"
+            [ "$code" -ge 200 ] && [ "$code" -lt 400 ] || failed=1
+          done
+          exit $failed

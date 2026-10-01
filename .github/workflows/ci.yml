@@ -57,6 +57,27 @@ jobs:
           docker run --rm -v "$PWD":/repo zricethezav/gitleaks:v8.30.1
           git /repo --redact --no-banner --gitleaks-ignore-path /repo/.gitleaksignore
 
+  edge-functions:
+    name: Edge Functions + gateway typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.1.4
+      - name: deno check (api, worker, doubt-solver)
+        run: |
+          for f in api worker doubt-solver; do
+            (cd supabase/functions/$f && deno check --config deno.json index.ts)
+          done
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: tsc (Cloudflare gateway)
+        run: npx tsc -p gateway/tsconfig.json
+
   database-tests:
     # Also the migration validation: every migration is applied from scratch,
     # in order, on production's Postgres version before the suite runs.

@@ -8,6 +8,7 @@ import {
   AlertTriangle, 
   UserCheck,
   BookOpen,
+  HeartPulse,
   Menu, 
   X, 
   LogOut 
@@ -62,6 +63,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       name: "Mentor Applications",
       path: "/admin/applications",
       icon: UserCheck,
+      roles: ["admin"],
+    },
+    {
+      name: "System Health",
+      path: "/admin/system",
+      icon: HeartPulse,
       roles: ["admin"],
     },
     {

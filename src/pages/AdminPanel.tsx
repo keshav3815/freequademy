@@ -6,6 +6,7 @@ import UserActivity from "@/pages/admin/UserActivity";
 import ReportManagement from "@/pages/admin/ReportManagement";
 import MentorApplications from "@/pages/admin/MentorApplications";
 import Curriculum from "@/pages/admin/Curriculum";
+import SystemHealth from "@/pages/admin/SystemHealth";
 import { useUserRole } from "@/hooks/useUserRole";
 
 const AdminPanel = () => {
@@ -32,6 +33,7 @@ const AdminPanel = () => {
         <Route path="/reports" element={<ReportManagement />} />
         <Route path="/curriculum" element={role === "admin" ? <Curriculum /> : <Navigate to="/admin" replace />} />
         <Route path="/applications" element={role === "admin" ? <MentorApplications /> : <Navigate to="/admin" replace />} />
+        <Route path="/system" element={role === "admin" ? <SystemHealth /> : <Navigate to="/admin" replace />} />
       </Routes>
     </DashboardLayout>
   );

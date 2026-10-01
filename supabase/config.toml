@@ -5,3 +5,11 @@ project_id = "odawqbevdzpkwkxbggnf"
 # compatibility with Supabase's asymmetric signing keys.
 [functions.doubt-solver]
 verify_jwt = false
+
+# Versioned service API (/v1). Verifies JWTs itself so public routes work.
+[functions.api]
+verify_jwt = false
+
+# Job runner, called by pg_cron with the x-worker-secret header.
+[functions.worker]
+verify_jwt = false

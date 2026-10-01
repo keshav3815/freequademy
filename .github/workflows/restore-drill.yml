@@ -1,0 +1,49 @@
+name: Restore drill
+
+# Weekly proof that the latest backup restores (Architecture V1 Phase 0):
+# decrypts it, restores into a throwaway database with production's Postgres,
+# Auth and Storage versions, checks every row count and foreign key, and
+# records how long it took (RTO evidence). Never touches a real project.
+
+on:
+  schedule:
+    - cron: "0 22 * * 0" # Monday 03:30 IST
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  drill:
+    name: Restore latest backup and verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: ${{ vars.BACKUP_ENABLED == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch the latest successful backup
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          run_id=$(gh run list --workflow backup.yml --status success --limit 1 --json databaseId --jq '.[0].databaseId')
+          [ -n "$run_id" ] || { echo "no successful backup run yet"; exit 1; }
+          gh run download "$run_id" -n freequademy-backup -D "$RUNNER_TEMP/backup"
+          ls -la "$RUNNER_TEMP/backup"
+      - name: Restore and verify
+        env:
+          BACKUP_PRIVATE_KEY_PEM: ${{ secrets.BACKUP_PRIVATE_KEY }}
+        run: |
+          umask 077
+          printf '%s\n' "$BACKUP_PRIVATE_KEY_PEM" > "$RUNNER_TEMP/backup-key.pem"
+          BACKUP_PRIVATE_KEY="$RUNNER_TEMP/backup-key.pem" \
+            scripts/restore-drill.sh "$(ls "$RUNNER_TEMP"/backup/*.tar.cms | head -1)" "$RUNNER_TEMP/restore-drill-report.json"
+      - name: Remove key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/backup-key.pem"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: restore-drill-report
+          path: ${{ runner.temp }}/restore-drill-report.json
+          retention-days: 90

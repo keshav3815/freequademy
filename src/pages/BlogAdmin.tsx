@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Plus, Trash2, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -211,6 +212,7 @@ const BlogAdmin = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
+      <Sonner />
       
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         <Link to="/blog">

@@ -1,5 +1,7 @@
 # Architecture V1 — Phase 0 report
 
+> **Superseded in part (2026-10-01):** under the zero-cost rule, Supabase Pro / Sentry SaaS are replaced by free equivalents. Latest status for all phases: [`v1-implementation-report.md`](v1-implementation-report.md).
+
 **Updated:** 2026-10-01 · **Branch:** `architecture/v1-phase-0` · **Draft PR:** [#1](https://github.com/keshav3815/freequademy/pull/1) (DO NOT MERGE)
 **Phase 0 status: IN PROGRESS — gate NOT met.** 10 of 22 gate items pass; the rest are blocked on the Pro upgrade, your inventory/Auth input, or Lovable (§4).
 
