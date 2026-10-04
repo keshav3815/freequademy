@@ -10,7 +10,7 @@
 |---|---|
 | Supabase Pro backups + PITR | Nightly encrypted logical backups in GitHub Actions + weekly automated restore drill (`backup.yml`, `restore-drill.yml`) |
 | Sentry SaaS | Own `client_errors` / `client_vitals` tables + scrubbing RPCs + admin System health page |
-| Extra paid staging project | A free Supabase project (needs one of the 2 free slots: pause or delete `APC`) |
+| Extra paid staging project | No hosted staging (free plan holds 2 projects; owner keeps `APC`). Staging = local Docker stack + CI throwaway stacks; Vercel Preview builds refuse to connect to production (`src/lib/environment.ts`) |
 | Supabase custom-domain add-on | Cloudflare Worker gateway on the free plan |
 | Lovable AI Gateway (paid credits) | Provider-agnostic `AIProvider` (any OpenAI-compatible endpoint, e.g. a free tier); Lovable key kept only as last-resort fallback |
 | Paid uptime/alerting | Scheduled GitHub Action; a failed run emails the owner |
@@ -88,7 +88,7 @@
 
 1. **Lovable:** revoke the four connections; send the evidence (screenshots).
 2. **Inventory:** run `supabase/sql/reports/production_inventory.sql` in the SQL editor; send the JSON and Auth settings.
-3. **Staging slot:** pause or delete the `APC` project (Free plan allows 2 active projects), or tell me to use local-only staging.
+3. **Staging:** decided 2026-10-04 — `APC` stays; staging is local + CI. No action needed.
 4. **Backups:** add `SUPABASE_DB_URL` secret and `BACKUP_ENABLED=true`; store `~/.config/freequademy/backup-key.pem` in your password manager.
 5. **Cloudflare:** free account + move `freequademy.com` DNS (gateway runbook).
 

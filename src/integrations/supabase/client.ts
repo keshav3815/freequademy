@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
+import { PRODUCTION_PROJECT_REF, isolationError } from '@/lib/environment';
 
 // Supabase connection settings come from the environment, never from source.
 //   local development → .env.development.local (local or staging project)
@@ -14,7 +15,12 @@ if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
   );
 }
 
-const PRODUCTION_PROJECT_REF = 'odawqbevdzpkwkxbggnf';
+// Vercel Preview builds must never touch production data (no hosted staging).
+const isolation = isolationError(SUPABASE_URL, import.meta.env.VITE_DEPLOY_ENV);
+if (isolation) {
+  throw new Error(isolation);
+}
+
 if (import.meta.env.DEV && SUPABASE_URL.includes(PRODUCTION_PROJECT_REF)) {
   console.warn(
     '[freequademy] The development server is connected to the PRODUCTION Supabase project. ' +
