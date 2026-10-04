@@ -8,7 +8,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 interface BlogPost {
   id: string;
@@ -22,22 +23,8 @@ interface BlogPost {
 }
 
 const Blog = () => {
-  const [isMentor, setIsMentor] = useState(false);
-
-  useEffect(() => {
-    const checkMentorStatus = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .single();
-        setIsMentor(profile?.role === "mentor");
-      }
-    };
-    checkMentorStatus();
-  }, []);
+  const { isMentor } = useAuth();
+  useDocumentMeta({ title: "Study Notes", description: "Free chapter notes and study guides written by Freequademy mentors, for Classes 6–12." });
 
   const { data: blogPosts, isLoading } = useQuery({
     queryKey: ["blog-posts"],
@@ -46,7 +33,8 @@ const Blog = () => {
         .from("blog_posts")
         .select("id, title, slug, subject, class_level, chapter, introduction, read_time_minutes")
         .eq("status", "published")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(60);
       
       if (error) throw error;
       return data as BlogPost[];

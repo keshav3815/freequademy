@@ -1,237 +1,243 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import { useMemo } from "react";
+import { Link, Navigate } from "react-router-dom";
+import StudentLayout from "@/components/dashboard/StudentLayout";
 import { Card } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import {
-  Flame,
-  Star,
-  Zap,
-  Loader2,
-  Calendar
-} from "lucide-react";
+import { Flame, Star, Zap, Loader2, Calendar, ClipboardCheck, TrendingUp } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useStudentDashboard } from "@/hooks/useStudentDashboard";
+import { buildRecommendations } from "@/lib/recommendations";
+import DashboardSection from "@/components/dashboard/DashboardSection";
 
-// Dashboard Components
+// Dashboard sections
+import AcademicProfileCard from "@/components/dashboard/AcademicProfileCard";
+import OverallProgressCard from "@/components/dashboard/OverallProgressCard";
+import MyLearningSection from "@/components/dashboard/MyLearningSection";
 import ContinueLearningWidget from "@/components/dashboard/ContinueLearningWidget";
-import QuickAccessShortcuts from "@/components/dashboard/QuickAccessShortcuts";
-import SubjectProgress from "@/components/dashboard/SubjectProgress";
-import RevisionPlanner from "@/components/dashboard/RevisionPlanner";
-import DoubtSolver from "@/components/dashboard/DoubtSolver";
+import SubjectPerformanceChart from "@/components/dashboard/charts/SubjectPerformanceChart";
+import WeakAreasCard from "@/components/dashboard/WeakAreasCard";
+import TestAnalyticsSection from "@/components/dashboard/TestAnalyticsSection";
+import LearningActivityHeatmap from "@/components/dashboard/LearningActivityHeatmap";
+import WeeklySummaryCard from "@/components/dashboard/WeeklySummaryCard";
+import XpStreakCard from "@/components/dashboard/XpStreakCard";
+import DoubtAnalyticsCard from "@/components/dashboard/DoubtAnalyticsCard";
+import MentorshipAnalyticsCard from "@/components/dashboard/MentorshipAnalyticsCard";
 import UpcomingSchedule from "@/components/dashboard/UpcomingSchedule";
+import DoubtSolver from "@/components/dashboard/DoubtSolver";
+import RecommendationsCard from "@/components/dashboard/RecommendationsCard";
+import TeacherAnnouncementsCard from "@/components/dashboard/TeacherAnnouncementsCard";
 
-
-// Grade-specific recent activity
-const getRecentActivityByGrade = (grade: string) => {
-  const gradeActivities: Record<string, typeof recentActivity> = {
-    "6": [
-      { subject: "Mathematics", chapter: "Fractions and Decimals", score: 85, time: "2 hours ago" },
-      { subject: "Science", chapter: "Food and Nutrition", score: 92, time: "Yesterday" },
-      { subject: "English", chapter: "Nouns and Pronouns", score: 78, time: "2 days ago" },
-    ],
-    "7": [
-      { subject: "Mathematics", chapter: "Algebraic Expressions", score: 85, time: "2 hours ago" },
-      { subject: "Science", chapter: "Heat and Temperature", score: 92, time: "Yesterday" },
-      { subject: "English", chapter: "Tenses", score: 78, time: "2 days ago" },
-    ],
-    "8": [
-      { subject: "Mathematics", chapter: "Linear Equations", score: 85, time: "2 hours ago" },
-      { subject: "Science", chapter: "Force and Pressure", score: 92, time: "Yesterday" },
-      { subject: "English", chapter: "Active and Passive Voice", score: 78, time: "2 days ago" },
-    ],
-    "9": [
-      { subject: "Mathematics", chapter: "Polynomials", score: 85, time: "2 hours ago" },
-      { subject: "Science", chapter: "Atoms and Molecules", score: 92, time: "Yesterday" },
-      { subject: "English", chapter: "Direct and Indirect Speech", score: 78, time: "2 days ago" },
-    ],
-    "10": [
-      { subject: "Mathematics", chapter: "Quadratic Equations", score: 85, time: "2 hours ago" },
-      { subject: "Science", chapter: "Chemical Reactions", score: 92, time: "Yesterday" },
-      { subject: "English", chapter: "Grammar Basics", score: 78, time: "2 days ago" },
-    ],
-    "11": [
-      { subject: "Mathematics", chapter: "Trigonometry", score: 85, time: "2 hours ago" },
-      { subject: "Physics", chapter: "Motion in a Plane", score: 92, time: "Yesterday" },
-      { subject: "Chemistry", chapter: "Chemical Bonding", score: 78, time: "2 days ago" },
-    ],
-    "12": [
-      { subject: "Mathematics", chapter: "Calculus", score: 85, time: "2 hours ago" },
-      { subject: "Physics", chapter: "Electromagnetic Waves", score: 92, time: "Yesterday" },
-      { subject: "Chemistry", chapter: "Organic Chemistry", score: 78, time: "2 days ago" },
-    ],
-  };
-  return gradeActivities[grade] || gradeActivities["10"];
-};
-
-const recentActivity = [
-  { subject: "Mathematics", chapter: "Quadratic Equations", score: 85, time: "2 hours ago" },
-  { subject: "Science", chapter: "Chemical Reactions", score: 92, time: "Yesterday" },
-  { subject: "English", chapter: "Grammar Basics", score: 78, time: "2 days ago" },
-];
+const GRADES = ["6", "7", "8", "9", "10", "11", "12"];
 
 export default function Dashboard() {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [level] = useState(12);
-  const [xp] = useState(2850);
-  const [nextLevelXp] = useState(3000);
-  const [streak] = useState(7);
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { profile, role, loading: authLoading } = useAuth();
+  const hasGrade = !!profile?.grade && GRADES.includes(profile.grade);
+  const currentGrade = hasGrade ? profile!.grade! : "10";
+  const userName = (profile?.full_name || "Student").split(" ")[0];
 
-  useEffect(() => {
-    fetchUserProfile();
-  }, []);
+  const d = useStudentDashboard(currentGrade);
 
-  const fetchUserProfile = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        navigate("/login");
-        return;
-      }
+  const recommendations = useMemo(
+    () =>
+      buildRecommendations({
+        weakAreas: d.weakAreas.data,
+        subjects: d.subjects.data,
+        doubtStats: d.doubtStats.data,
+      }),
+    [d.weakAreas.data, d.subjects.data, d.doubtStats.data],
+  );
 
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
+  const subjectChartData = useMemo(
+    () =>
+      (d.subjects.data ?? []).map((s) => ({
+        subject_id: s.subject_id,
+        subject_name: s.subject_name,
+        completion_pct: s.lesson_count > 0 ? Math.round((s.lessons_completed / s.lesson_count) * 100) : 0,
+        average_score: s.average_score === null ? null : Number(s.average_score),
+      })),
+    [d.subjects.data],
+  );
 
-      if (error) {
-        console.error("Error fetching profile:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load profile",
-          variant: "destructive",
-        });
-      } else {
-        setUserProfile(profile);
-      }
-    } catch (error) {
-      console.error("Error:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const currentGrade = userProfile?.grade || "10";
-  const userName = userProfile?.full_name || "Student";
-  const currentActivities = getRecentActivityByGrade(currentGrade);
-  
-  // Get current date info
-  const today = new Date();
-  const dayProgress = Math.round((today.getHours() / 24) * 100);
-
-  if (isLoading) {
+  if (authLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center" role="status" aria-label="Loading">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
+  // Teachers have their own workspace; the student dashboard has nothing for them.
+  if (role === "mentor") return <Navigate to="/teacher" replace />;
+
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      
-      <section className="py-6 md:py-10">
-        <div className="container mx-auto px-4">
-          
-          {/* ========== TOP SECTION ========== */}
-          {/* Welcome + XP/Level/Streak + Progress Bar */}
-          <div className="mb-8">
-            {/* Welcome Header with Quick Stats */}
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4 animate-slide-up">
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold mb-1">
-                  Welcome back, <span className="bg-gradient-primary bg-clip-text text-transparent">{userName}!</span>
-                </h1>
-                <p className="text-muted-foreground flex items-center gap-2 text-sm">
-                  <Calendar className="h-4 w-4" />
-                  Class {currentGrade} Dashboard
-                </p>
-              </div>
-              
-              {/* XP, Level, Streak Badges */}
-              <div className="flex flex-wrap gap-3 animate-fade-in">
-                <Card className="px-4 py-2 flex items-center gap-2">
-                  <div className="p-1.5 rounded-full bg-primary/10">
-                    <Star className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Level</p>
-                    <p className="font-bold">{level}</p>
-                  </div>
-                </Card>
-                <Card className="px-4 py-2 flex items-center gap-2">
-                  <div className="p-1.5 rounded-full bg-yellow-500/10">
-                    <Zap className="h-4 w-4 text-yellow-500" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">XP</p>
-                    <p className="font-bold">{xp}/{nextLevelXp}</p>
-                  </div>
-                </Card>
-                <Card className="px-4 py-2 flex items-center gap-2">
-                  <div className="p-1.5 rounded-full bg-orange-500/10">
-                    <Flame className="h-4 w-4 text-orange-500" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Streak</p>
-                    <p className="font-bold">{streak} days</p>
-                  </div>
-                </Card>
-              </div>
-            </div>
+    <StudentLayout>
+      <div className="py-6 md:py-10">
+        <div className="container mx-auto px-4 space-y-8">
+          {/* ---------- Header ---------- */}
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold mb-1">
+              Welcome back, <span className="bg-gradient-primary bg-clip-text text-transparent">{userName}!</span>
+            </h1>
+            <p className="text-muted-foreground flex items-center gap-2 text-sm">
+              <Calendar className="h-4 w-4" />
+              {hasGrade ? `Class ${currentGrade} Dashboard` : "Class not set"}
+            </p>
+            {!hasGrade && (
+              <p className="text-sm text-muted-foreground mt-2">
+                Showing Class 10 as a default. <Link to="/courses" className="text-primary underline">Browse all classes</Link>.
+              </p>
+            )}
+          </div>
 
-            {/* Today's Learning Progress Bar */}
-            <Card className="p-4 bg-gradient-to-r from-primary/5 to-secondary/5 animate-fade-in">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Today's Learning Progress</span>
-                <span className="text-sm text-primary font-semibold">65%</span>
-              </div>
-              <Progress value={65} className="h-2.5" />
-              <p className="text-xs text-muted-foreground mt-2">3 lessons & 2 quizzes completed. Keep it up!</p>
+          <TeacherAnnouncementsCard />
+
+          {/* ---------- KPI row ---------- */}
+          <DashboardSection query={d.summary} title="your summary" minHeight={92}>
+            {(summary) => {
+              const testAvg = summary?.average_score !== null && summary?.average_score !== undefined ? Number(summary.average_score) : null;
+              const overallCompletionPct = subjectChartData.length
+                ? Math.round(subjectChartData.reduce((s, x) => s + x.completion_pct, 0) / subjectChartData.length)
+                : 0;
+              const completedCourses = (d.subjects.data ?? []).filter((s) => s.status === "completed").length;
+              return (
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  <Card
+                    className="p-4"
+                    role="group"
+                    aria-label={`Current level: Level ${summary?.level ?? 1}, ${(summary?.xp_for_next_level ?? 250) - (summary?.xp_into_level ?? 0)} XP to next level`}
+                  >
+                    <div className="flex items-center gap-2 mb-1"><Star className="h-4 w-4 text-primary" /><span className="text-xs text-muted-foreground">Current Level</span></div>
+                    <p className="text-2xl font-bold" aria-hidden="true">Level {summary?.level ?? 1}</p>
+                    <p className="text-xs text-muted-foreground" aria-hidden="true">+{(summary?.xp_for_next_level ?? 250) - (summary?.xp_into_level ?? 0)} XP to next</p>
+                  </Card>
+                  <Card
+                    className="p-4"
+                    role="group"
+                    aria-label={`XP earned: ${summary?.total_xp ?? 0} total, ${summary?.xp_this_week ?? 0} this week`}
+                  >
+                    <div className="flex items-center gap-2 mb-1"><Zap className="h-4 w-4 text-yellow-600" /><span className="text-xs text-muted-foreground">XP Earned</span></div>
+                    <p className="text-2xl font-bold" aria-hidden="true">{summary?.total_xp ?? 0}</p>
+                    <p className="text-xs text-muted-foreground" aria-hidden="true">+{summary?.xp_this_week ?? 0} this week</p>
+                  </Card>
+                  <Card
+                    className="p-4"
+                    role="group"
+                    aria-label={`Course progress: ${overallCompletionPct}%, ${completedCourses} of ${subjectChartData.length} courses completed`}
+                  >
+                    <div className="flex items-center gap-2 mb-1"><TrendingUp className="h-4 w-4 text-primary" /><span className="text-xs text-muted-foreground">Course Progress</span></div>
+                    <p className="text-2xl font-bold" aria-hidden="true">{overallCompletionPct}%</p>
+                    <p className="text-xs text-muted-foreground" aria-hidden="true">{completedCourses}/{subjectChartData.length} courses</p>
+                  </Card>
+                  <Card
+                    className="p-4"
+                    role="group"
+                    aria-label={`Test average: ${testAvg === null ? "no tests taken yet" : `${testAvg}%`}, ${summary?.tests_submitted ?? 0} tests taken`}
+                  >
+                    <div className="flex items-center gap-2 mb-1"><ClipboardCheck className="h-4 w-4 text-primary" /><span className="text-xs text-muted-foreground">Test Average</span></div>
+                    <p className="text-2xl font-bold" aria-hidden="true">{testAvg === null ? "—" : `${testAvg}%`}</p>
+                    <p className="text-xs text-muted-foreground" aria-hidden="true">{summary?.tests_submitted ?? 0} tests taken</p>
+                  </Card>
+                  <Card
+                    className="p-4"
+                    role="group"
+                    aria-label={`Learning streak: ${summary?.streak_days ?? 0} day${summary?.streak_days === 1 ? "" : "s"}, best ${summary?.best_streak_days ?? 0} days`}
+                  >
+                    <div className="flex items-center gap-2 mb-1"><Flame className="h-4 w-4 text-orange-600" /><span className="text-xs text-muted-foreground">Learning Streak</span></div>
+                    <p className="text-2xl font-bold" aria-hidden="true">{summary?.streak_days ?? 0} day{summary?.streak_days === 1 ? "" : "s"}</p>
+                    <p className="text-xs text-muted-foreground" aria-hidden="true">Best: {summary?.best_streak_days ?? 0} days</p>
+                  </Card>
+                </div>
+              );
+            }}
+          </DashboardSection>
+
+          {/* ---------- Academic profile + overall progress ---------- */}
+          <div className="grid lg:grid-cols-2 gap-6">
+            <DashboardSection query={d.subjects} title="your academic profile" minHeight={200}>
+              {(subjects) => <AcademicProfileCard grade={hasGrade ? currentGrade : null} subjects={subjects} />}
+            </DashboardSection>
+            <DashboardSection query={d.summary} title="your overall progress" minHeight={200}>
+              {(summary) => (
+                <OverallProgressCard
+                  subjects={(d.subjects.data ?? []).map((s) => ({ status: s.status, lesson_count: s.lesson_count, lessons_completed: s.lessons_completed }))}
+                  testsAttempted={summary?.tests_submitted ?? 0}
+                  testsPublished={(d.subjects.data ?? []).reduce((sum, s) => sum + s.test_count, 0)}
+                  activeDaysLast30={summary?.active_days_last_30 ?? 0}
+                />
+              )}
+            </DashboardSection>
+          </div>
+
+          {/* ---------- My Learning ---------- */}
+          <DashboardSection query={d.subjects} title="your courses" minHeight={220}>
+            {(subjects) => <MyLearningSection subjects={subjects} grade={currentGrade} />}
+          </DashboardSection>
+
+          {/* ---------- Continue / Subject performance / Weak areas ---------- */}
+          <div className="grid lg:grid-cols-3 gap-6">
+            <DashboardSection query={d.continueLesson} title="continue learning" minHeight={200}>
+              {(lesson) => <ContinueLearningWidget lesson={lesson} grade={currentGrade} />}
+            </DashboardSection>
+            <Card className="p-5 lg:col-span-1">
+              <h3 className="font-semibold mb-4">Subject Performance</h3>
+              <DashboardSection query={d.subjects} title="subject performance" minHeight={160}>
+                {() => <SubjectPerformanceChart data={subjectChartData} />}
+              </DashboardSection>
             </Card>
+            <DashboardSection query={d.weakAreas} title="areas needing attention" minHeight={200}>
+              {(areas) => <WeakAreasCard areas={areas} />}
+            </DashboardSection>
           </div>
 
-          {/* Quick Access Shortcuts */}
-          <div className="mb-8">
-            <QuickAccessShortcuts />
+          {/* ---------- Test performance ---------- */}
+          <DashboardSection query={d.recentTests} title="test performance" minHeight={300}>
+            {(results) => <TestAnalyticsSection results={results} />}
+          </DashboardSection>
+
+          {/* ---------- Activity + weekly summary ---------- */}
+          <div className="grid lg:grid-cols-2 gap-6">
+            <DashboardSection query={d.activityDays} title="learning activity" minHeight={220}>
+              {(days) => <LearningActivityHeatmap days={days} />}
+            </DashboardSection>
+            <DashboardSection query={d.weeklySummary} title="this week's summary" minHeight={220}>
+              {({ thisWeek, lastWeek }) => <WeeklySummaryCard thisWeek={thisWeek} lastWeek={lastWeek} />}
+            </DashboardSection>
           </div>
 
-          {/* ========== MIDDLE SECTION ========== */}
-          {/* Continue Learning + Subjects Overview + Upcoming Schedule */}
-          <div className="grid lg:grid-cols-3 gap-6 mb-8">
-            {/* Continue Learning */}
-            <ContinueLearningWidget grade={currentGrade} />
-            
-            {/* Subject Progress Overview */}
-            <SubjectProgress grade={currentGrade} />
-            
-            {/* Upcoming Tests/Classes */}
+          {/* ---------- XP/streak, doubts, mentorship, upcoming ---------- */}
+          <div className="grid lg:grid-cols-2 gap-6">
+            <DashboardSection query={d.summary} title="XP and streak" minHeight={260}>
+              {(summary) => (
+                <DashboardSection query={d.xpBreakdown} title="XP breakdown" minHeight={260}>
+                  {(breakdown) => (
+                    <XpStreakCard
+                      breakdown={breakdown}
+                      streakDays={summary?.streak_days ?? 0}
+                      bestStreakDays={summary?.best_streak_days ?? 0}
+                      activeDaysThisWeek={summary?.active_days_this_week ?? 0}
+                    />
+                  )}
+                </DashboardSection>
+              )}
+            </DashboardSection>
+            <DashboardSection query={d.doubtStats} title="doubt analytics" minHeight={260}>
+              {(stats) => <DoubtAnalyticsCard stats={stats} recent={d.recentDoubts.data ?? []} />}
+            </DashboardSection>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-6">
+            <DashboardSection query={d.mentorship} title="mentorship" minHeight={220}>
+              {(summary) => <MentorshipAnalyticsCard summary={summary} />}
+            </DashboardSection>
             <UpcomingSchedule grade={currentGrade} />
           </div>
 
-          {/* ========== BOTTOM SECTION ========== */}
-          {/* Doubt Solver + Revision Planner */}
-          <div className="grid lg:grid-cols-2 gap-6 mb-8">
-            {/* Doubt Solver */}
-            <DoubtSolver grade={currentGrade} />
-            
-            {/* Revision Planner */}
-            <RevisionPlanner grade={currentGrade} />
-          </div>
+          {/* ---------- AI doubt solver (preserved) ---------- */}
+          <DoubtSolver grade={currentGrade} />
 
+          {/* ---------- Recommendations ---------- */}
+          <RecommendationsCard recommendations={recommendations} />
         </div>
-      </section>
-
-      <Footer />
-    </div>
+      </div>
+    </StudentLayout>
   );
 }

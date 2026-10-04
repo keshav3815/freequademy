@@ -1,0 +1,43 @@
+name: Backup
+
+# Free replacement for paid Supabase backups (zero-cost rule): a nightly logical
+# backup, encrypted to ops/backup-recipient.pem (AES-256-GCM) before it is
+# stored. This repository is public, so artifacts only ever hold ciphertext.
+# RPO ≤ 24 h. Runbook: docs/architecture/runbooks/backup-restore.md
+
+on:
+  schedule:
+    - cron: "0 20 * * *" # 01:30 IST, low traffic
+  workflow_dispatch:
+
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    name: Encrypted nightly backup
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Requires the SUPABASE_DB_URL secret (production session-pooler URI).
+    # Without it the job is skipped instead of failing.
+    if: ${{ vars.BACKUP_ENABLED == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.100.1
+      - name: Back up and encrypt
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE: supabase
+        run: scripts/backup.sh "$RUNNER_TEMP/backup"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: freequademy-backup
+          path: ${{ runner.temp }}/backup/*.tar.cms
+          retention-days: 30
+          if-no-files-found: error

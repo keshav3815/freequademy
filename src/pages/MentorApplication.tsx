@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function MentorApplication() {
   const navigate = useNavigate();
@@ -29,6 +30,25 @@ export default function MentorApplication() {
     motivation: "",
     is_volunteer: false,
   });
+  const { user, profile, isMentor } = useAuth();
+  const [existingStatus, setExistingStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    setFormData(prev => ({
+      ...prev,
+      full_name: prev.full_name || profile?.full_name || "",
+      email: prev.email || user.email || "",
+    }));
+    supabase
+      .from('mentor_applications')
+      .select('status')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => setExistingStatus(data?.status ?? null));
+  }, [user, profile]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -54,7 +74,9 @@ export default function MentorApplication() {
     setLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      // Local session (no network round trip); RLS enforces access server-side.
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user ?? null;
       
       if (!user) {
         toast({
@@ -116,6 +138,23 @@ export default function MentorApplication() {
         </Button>
 
         <div className="max-w-3xl mx-auto">
+          {(isMentor || existingStatus === 'pending') ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>{isMentor ? "You're already a mentor" : "Application under review"}</CardTitle>
+                <CardDescription>
+                  {isMentor
+                    ? "Head to your teacher dashboard to manage sessions and content."
+                    : "Thanks for applying! An administrator will review your application. You'll get mentor access once it's approved."}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button onClick={() => navigate(isMentor ? '/teacher' : '/dashboard')}>
+                  {isMentor ? "Go to teacher dashboard" : "Back to dashboard"}
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
           <Card>
             <CardHeader>
               <CardTitle className="text-3xl">Mentor Application</CardTitle>
@@ -300,6 +339,7 @@ export default function MentorApplication() {
               </form>
             </CardContent>
           </Card>
+          )}
         </div>
       </main>
 

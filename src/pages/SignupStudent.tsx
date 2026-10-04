@@ -68,15 +68,16 @@ const SignupStudent = () => {
         data: {
           full_name: fullName,
           grade,
-          role: 'student',
         },
       },
     });
 
     if (error) {
+      // Generic message: echoing Supabase's error would reveal whether an
+      // email address is already registered.
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Could not create account",
+        description: "Please check your details and try again. If you already have an account, log in instead.",
         variant: "destructive",
       });
     } else {

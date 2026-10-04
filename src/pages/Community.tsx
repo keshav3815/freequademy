@@ -6,9 +6,11 @@ import { MessageSquare, Users, Calendar } from "lucide-react";
 import ForumSection from "@/components/community/ForumSection";
 import ClubsSection from "@/components/community/ClubsSection";
 import EventsSection from "@/components/community/EventsSection";
+import { useDocumentMeta } from "@/hooks/useDocumentMeta";
 
 const Community = () => {
   const [activeTab, setActiveTab] = useState("forums");
+  useDocumentMeta({ title: "Community", description: "Discussion forums, student clubs and live events on Freequademy." });
 
   return (
     <div className="min-h-screen bg-background">

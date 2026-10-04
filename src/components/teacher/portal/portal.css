@@ -1,0 +1,89 @@
+/*
+ * Teacher portal design tokens. TeacherLayout adds `teacher-portal` to <html>
+ * while it is mounted, so these overrides also reach Radix portals (dialogs,
+ * menus, sheets) that render outside the layout's DOM subtree, and disappear
+ * when the teacher leaves the portal. The rest of the app is unaffected.
+ *
+ * Neutral surfaces, one brand accent (the existing Freequademy indigo),
+ * semantic colors for state only.
+ */
+html.teacher-portal {
+  --background: 220 20% 98%;
+  --foreground: 222 28% 12%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 28% 12%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 28% 12%;
+  --primary: 243 75% 58%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 14% 96%;
+  --secondary-foreground: 222 28% 12%;
+  --muted: 220 14% 95%;
+  --muted-foreground: 220 9% 42%;
+  --accent: 243 80% 97%;
+  --accent-foreground: 243 55% 45%;
+  --border: 220 13% 90%;
+  --input: 220 13% 86%;
+  --ring: 243 75% 58%;
+  --radius: 0.625rem;
+
+  --success: 152 60% 36%;
+  --warning: 32 90% 42%;
+  --destructive: 0 70% 50%;
+  --info: 214 80% 48%;
+
+  --tp-sidebar: 0 0% 100%;
+  --tp-shadow-sm: 0 1px 2px hsl(222 28% 12% / 0.04);
+  --tp-shadow-md: 0 4px 16px -4px hsl(222 28% 12% / 0.10);
+}
+
+html.teacher-portal body {
+  font-family: "Plus Jakarta Sans", "Lato", ui-sans-serif, system-ui, sans-serif;
+  background: hsl(var(--background));
+  font-feature-settings: "cv11";
+}
+
+html.teacher-portal h1,
+html.teacher-portal h2,
+html.teacher-portal h3 {
+  letter-spacing: -0.01em;
+}
+
+/* Calmer modal backdrop than the app default. */
+html.teacher-portal .bg-black\/80 {
+  background-color: hsl(222 28% 12% / 0.35);
+  backdrop-filter: blur(2px);
+}
+
+/* Shared primitives in the portal never scale or glow on hover. */
+html.teacher-portal .tp-root .hover\:scale-105:hover {
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+}
+
+.tp-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Visible, consistent keyboard focus. */
+html.teacher-portal .tp-focus:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+@keyframes tp-live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.tp-live-dot {
+  animation: tp-live-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.teacher-portal *,
+  html.teacher-portal *::before,
+  html.teacher-portal *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

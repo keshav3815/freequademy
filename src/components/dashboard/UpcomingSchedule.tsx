@@ -1,109 +1,83 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { Calendar, Users, Video } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Calendar, 
-  Clock, 
-  Video, 
-  FileText, 
-  Bell,
-  ArrowRight
-} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
-interface UpcomingScheduleProps {
-  grade: string;
+interface Item {
+  id: string;
+  title: string;
+  when: Date;
+  kind: "session" | "event";
 }
 
-const getScheduleByGrade = (grade: string) => {
-  const schedules: Record<string, typeof defaultSchedule> = {
-    "10": [
-      { type: "test", title: "Math Unit Test", time: "Tomorrow, 10:00 AM", subject: "Mathematics", icon: FileText },
-      { type: "class", title: "Live Class: Trigonometry", time: "Today, 4:00 PM", subject: "Mathematics", icon: Video },
-      { type: "revision", title: "Science Revision", time: "Dec 14, 2:00 PM", subject: "Science", icon: Bell },
-    ],
-    "11": [
-      { type: "test", title: "Physics Mock Test", time: "Tomorrow, 10:00 AM", subject: "Physics", icon: FileText },
-      { type: "class", title: "Live Class: Calculus", time: "Today, 4:00 PM", subject: "Mathematics", icon: Video },
-      { type: "revision", title: "Chemistry Revision", time: "Dec 14, 2:00 PM", subject: "Chemistry", icon: Bell },
-    ],
-    "12": [
-      { type: "test", title: "Board Prep Test", time: "Tomorrow, 10:00 AM", subject: "All Subjects", icon: FileText },
-      { type: "class", title: "Live Class: Integration", time: "Today, 4:00 PM", subject: "Mathematics", icon: Video },
-      { type: "revision", title: "Physics Revision", time: "Dec 14, 2:00 PM", subject: "Physics", icon: Bell },
-    ],
-  };
-  return schedules[grade] || schedules["10"];
-};
+/** The student's registered mentorship sessions and community events. */
+export default function UpcomingSchedule(_props: { grade: string }) {
+  const { user } = useAuth();
+  const [items, setItems] = useState<Item[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
-const defaultSchedule = [
-  { type: "test", title: "Math Unit Test", time: "Tomorrow, 10:00 AM", subject: "Mathematics", icon: FileText },
-  { type: "class", title: "Live Class: Algebra", time: "Today, 4:00 PM", subject: "Mathematics", icon: Video },
-  { type: "revision", title: "Science Revision", time: "Dec 14, 2:00 PM", subject: "Science", icon: Bell },
-];
-
-export default function UpcomingSchedule({ grade }: UpcomingScheduleProps) {
-  const schedule = getScheduleByGrade(grade);
-
-  const getTypeStyles = (type: string) => {
-    switch (type) {
-      case "test":
-        return "bg-red-500/10 text-red-500 border-red-500/20";
-      case "class":
-        return "bg-green-500/10 text-green-500 border-green-500/20";
-      case "revision":
-        return "bg-blue-500/10 text-blue-500 border-blue-500/20";
-      default:
-        return "bg-primary/10 text-primary border-primary/20";
-    }
-  };
+  useEffect(() => {
+    if (!user) return;
+    const now = new Date().toISOString();
+    Promise.all([
+      supabase
+        .from("session_participants")
+        .select("session:mentorship_sessions(id, title, scheduled_at, status)")
+        .eq("student_id", user.id)
+        .in("status", ["registered", "attended"]),
+      supabase
+        .from("event_registrations")
+        .select("event:community_events(id, title, scheduled_at)")
+        .eq("user_id", user.id),
+    ]).then(([sessions, events]) => {
+      const list: Item[] = [
+        ...(sessions.data ?? [])
+          .map((r) => r.session)
+          .filter((s): s is NonNullable<typeof s> => !!s && s.status === "scheduled" && s.scheduled_at >= now)
+          .map((s) => ({ id: s.id, title: s.title, when: new Date(s.scheduled_at), kind: "session" as const })),
+        ...(events.data ?? [])
+          .map((r) => r.event)
+          .filter((e): e is NonNullable<typeof e> => !!e && e.scheduled_at >= now)
+          .map((e) => ({ id: e.id, title: e.title, when: new Date(e.scheduled_at), kind: "event" as const })),
+      ].sort((a, b) => a.when.getTime() - b.when.getTime());
+      setItems(list.slice(0, 5));
+      setLoaded(true);
+    });
+  }, [user]);
 
   return (
-    <Card className="p-5 animate-fade-in">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <div className="p-2 rounded-lg bg-orange-500/10">
-            <Calendar className="h-5 w-5 text-orange-500" />
-          </div>
-          <div>
-            <h3 className="font-semibold">Upcoming Schedule</h3>
-            <p className="text-xs text-muted-foreground">Tests, classes & revisions</p>
+    <Card className="p-5">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="p-2 rounded-lg bg-primary/10"><Calendar className="h-5 w-5 text-primary" /></div>
+        <h3 className="font-semibold">Upcoming</h3>
+      </div>
+      {loaded && items.length === 0 ? (
+        <div className="text-sm text-muted-foreground space-y-3">
+          <p>Nothing scheduled. Join a mentorship session or a live event.</p>
+          <div className="flex gap-2">
+            <Button asChild size="sm" variant="outline"><Link to="/mentorship">Sessions</Link></Button>
+            <Button asChild size="sm" variant="outline"><Link to="/community">Events</Link></Button>
           </div>
         </div>
-        <Badge variant="outline" className="text-xs">
-          {schedule.length} events
-        </Badge>
-      </div>
-
-      <div className="space-y-3">
-        {schedule.map((item, index) => (
-          <div
-            key={index}
-            className={`p-3 rounded-lg border transition-all hover:scale-[1.02] cursor-pointer ${getTypeStyles(item.type)}`}
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-background/80">
-                  <item.icon className="h-4 w-4" />
-                </div>
-                <div>
-                  <h4 className="font-medium text-sm">{item.title}</h4>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Clock className="h-3 w-3" />
-                    <span className="text-xs">{item.time}</span>
-                  </div>
-                </div>
-              </div>
-              <Badge variant="secondary" className="text-xs">
-                {item.subject}
-              </Badge>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <Button variant="ghost" className="w-full mt-4 text-sm" size="sm">
-        View Full Calendar <ArrowRight className="h-4 w-4 ml-1" />
-      </Button>
+      ) : (
+        <ul className="space-y-2">
+          {items.map((item) => (
+            <li key={`${item.kind}-${item.id}`} className="flex items-center gap-3 rounded-lg border p-3">
+              {item.kind === "session" ? <Video className="h-4 w-4 text-primary shrink-0" aria-hidden="true" /> : <Users className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />}
+              <span className="min-w-0">
+                <span className="block text-sm font-medium truncate">{item.title}</span>
+                <span className="block text-xs text-muted-foreground">
+                  {item.when.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })} •{" "}
+                  {item.when.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
     </Card>
   );
 }

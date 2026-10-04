@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,7 +7,8 @@ import { Card } from "@/components/ui/card";
 import { BookOpen, Mail, Lock, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Session, User } from "@supabase/supabase-js";
+import { useAuth } from "@/contexts/AuthContext";
+import { homePathForRole, safeRedirectPath } from "@/lib/auth";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -15,55 +16,17 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const location = useLocation();
+  const { isAuthenticated, loading, role } = useAuth();
 
+  // Redirect once the shared auth context knows who signed in. The return path
+  // comes from router state set by <RequireAuth>, and is restricted to
+  // same-origin app paths.
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Redirect based on user role if logged in
-        if (session?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', session.user.id)
-            .single();
-            
-          if (profile?.role === 'mentor') {
-            navigate("/teacher-dashboard");
-          } else {
-            navigate("/dashboard");
-          }
-        }
-      }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-          
-        if (profile?.role === 'mentor') {
-          navigate("/teacher-dashboard");
-        } else {
-          navigate("/dashboard");
-        }
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    if (loading || !isAuthenticated) return;
+    const from = safeRedirectPath((location.state as { from?: unknown } | null)?.from);
+    navigate(from ?? homePathForRole(role), { replace: true });
+  }, [loading, isAuthenticated, role, location.state, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,11 +114,7 @@ export default function Login() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" className="rounded" />
-                Remember me
-              </label>
+            <div className="flex items-center justify-end">
               <Link to="/forgot-password" className="text-sm text-primary hover:underline">
                 Forgot password?
               </Link>
